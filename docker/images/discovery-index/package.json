@@ -13,7 +13,7 @@
     "nodemon": "^2.0.4"
   },
   "scripts": {
-    "dev": "NODE_ENV=development nodemon server.js"
+    "dev": "NODE_ENV=development source ../scripts/secrets && nodemon server.js"
   },
   "author": "Shawn T O'Neil",
   "license": "MIT"

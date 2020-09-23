@@ -1,0 +1,10 @@
+version: "3.8"
+services:
+  api:
+    build: images/discovery-index
+    image: oneilsh/discovery-index:0.1.3
+    ports: 
+     - "8000:8000"
+    environment: 
+      GITHUB_ACCESS_TOKEN: ${GITHUB_ACCESS_TOKEN}
+

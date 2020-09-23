@@ -4,10 +4,20 @@ var express = require('express')
 var bodyParser = require('body-parser')
 var app = express()
 
+if(!process.env.GITHUB_ACCESS_TOKEN) {
+  console.log("Sorry, running this server requires GITHUB_ACCESS_TOKEN environment variable to be set.")
+  process.exit(1)
+}
+
 var { Octokit } = require('@octokit/rest')
 var octokit = new Octokit({
-  userAgent: 'DiscoveryIndex ' + psJson.version
+  userAgent: 'DiscoveryIndex ' + psJson.version,
+  auth: process.env.GITHUB_ACCESS_TOKEN
 })
+
+
+
+
 
 // basic logging - call logger middleware regardless of method; it calls next() to pass process on to the next middlewares
 app.use(logger)
@@ -28,20 +38,16 @@ app.post('/newuser', function(req, res) {
 
 
 
-
-// if GET is called on /
-app.get('/', function(req, res, next){
-  res.status(200).send("Why hello there ;)")
+app.get('/github-user/:userID', function(req, res, next) {
+  octokit.request('GET /users/' + req.params.userID)
+    .then((data) => {
+      console.log("teehee!")
+      res.status(200).send(data)
+    })
+    .catch((err) => {
+      res.status(404).send(err)
+    })  
 })
-
-app.get('/user/:userID', function(req, res, next){
-  console.log(req.params)
-  res.status(200).send({message: "Got userId " + req.params.userID})
-})
-
-//app.get('/github-user/:userID', function(req, res, next) {
-//  
-//})
 
 // last resort if no previous route matched
 app.use('*', function(req, res, next) {
