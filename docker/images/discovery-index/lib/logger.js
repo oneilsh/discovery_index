@@ -1,3 +1,4 @@
+
 exports.stdOutLogger = function(req, res, next) {
   console.log("== Request received:")
   console.log("  - Method: ", req.method)

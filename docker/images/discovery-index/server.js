@@ -6,8 +6,12 @@ var app = express()
 var bodyParser = require('body-parser')
 
 var { runCypher } = require('./lib/neo4j.js')
-var { octokit } = require('./lib/gitHub.js')
+var { updateGithub } = require('./lib/gitHub.js')
+var { updateOrcid } = require('./lib/orcid.js')
+var { updatePrimaryId } = require('./lib/general.js')
 
+// updateOrcid("0000-0001-6220-7080").then(res => console.log(res)).catch(e => console.log(e))
+// updateGithub("oneilsh").then(res => {console.log(res)}).catch(e => {})
 
 // basic logging - call logger middleware regardless of method; it calls next() to pass process on to the next middlewares
 app.use(logger)
@@ -15,8 +19,40 @@ app.use(logger)
 // call this function for every request; if it sees application/json, it parses it and stores it in the req object before continuing on
 app.use(bodyParser.json())
 
+// just an async function so we can await multiple calls and concatenate the results for return
+// takes the request as given to express below
+async function updateAll(req) {
+  try {
+    if(!req.body.profile) { req.body.profile = {} }
+    var resultMap = {}
+    console.log("updating primary...")
+    resultMap.primaryResult = await updatePrimaryId(req.body.primaryId, req.body.profile)
+    
+    if(req.body.githubId) {
+      console.log("updating github...")
+      resultMap.githubResult = await updateGithub(req.body.primaryId, req.body.githubId)
+    }
+    if(req.body.orcidId) { 
+      console.log("updating orcid...")
+      resultMap.ordicResult = await updateOrcid(req.body.primaryId, req.body.orcidId) 
+    }
+ 
+    return resultMap
+  } catch(e) {
+    throw e
+  }
+}
 
-
+app.post('/updateuser', function(req, res) {
+  if(req.body && req.body.primaryId) {
+    updateAll(req)
+      .then(result => {console.log(result); res.status(200).json(result)})
+      .catch(err => {console.log(err); res.status(400).json(err)})
+ 
+ } else {
+    res.status(400).json({err: "Error: must post json with at least primaryId field."})
+  }
+})
 
 // next is optional?
 app.post('/newuser', function(req, res) {
@@ -42,16 +78,6 @@ app.post('/newuser', function(req, res) {
  
 
 
-app.get('/github-user/:userID', function(req, res, next) {
-  octokit.request('GET /users/' + req.params.userID)
-    .then((data) => {
-      console.log("teehee!")
-      res.status(200).send(data)
-    })
-    .catch((err) => {
-      res.status(404).send(err)
-    })  
-})
 
 
 
