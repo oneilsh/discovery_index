@@ -15,7 +15,7 @@
     "nodemon": "^2.0.4"
   },
   "scripts": {
-    "dev": "NODE_ENV=development export $(cat ../../../scripts/secrets | xargs) && nodemon --trace-warnings server.js"
+    "dev": "NODE_ENV=development export $(cat git-crypt/RUN_VARS | xargs) && nodemon --trace-warnings server.js"
   },
   "author": "Shawn T O'Neil",
   "license": "MIT"
