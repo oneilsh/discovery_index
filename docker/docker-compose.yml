@@ -8,7 +8,7 @@ services:
     ports: 
       - "8000:8000"
     env_file:
-      - ../scripts/secrets
+      - images/discovery-index/git-crypt/RUN_VARS
 
   neo4j:
     image: neo4j:3.5
@@ -16,5 +16,5 @@ services:
       - "7474:7474"
       - "7687:7687"
     env_file:
-      - ../scripts/secrets
+      - images/discovery-index/git-crypt/RUN_VARS
 
