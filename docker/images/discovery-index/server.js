@@ -4,6 +4,8 @@ var logger = stdOutLogger
 var express = require('express')
 var app = express()
 var bodyParser = require('body-parser')
+var https = require('https')
+var fs = require('fs')
 
 var { runCypher } = require('./lib/neo4j.js')
 var { updateGithub } = require('./lib/gitHub.js')
@@ -90,11 +92,18 @@ app.use('*', function(req, res, next) {
 
 
 /////////   Run main proces
-var port = 8000
+var port = 443
 if(process.env.PORT) {
   port = process.env.PORT
 }
 
-app.listen(port, function() {
-  console.log("== Server is listening on port " + port)
-})
+if(port != 443) {
+  app.listen(port, function() {
+    console.log("== Server is listening on port " + port)
+  })
+
+} else {
+  var httpsServer = https.createServer({
+//    key: 
+  })
+}
