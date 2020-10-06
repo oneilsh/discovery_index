@@ -107,8 +107,10 @@ if(port != 443) {
     key: fs.readFileSync('git-crypt/private.key'),
     cert: fs.readFileSync('git-crypt/public.cert')
   }, app)
+
+  httpsServer.listen(port, () => {
+    console.log("== Server is listening with https on port " + port)
+  })
+
 }
 
-httpsServer.listen(port, () => {
-  console.log("== Server is listening with https on port " + port)
-})

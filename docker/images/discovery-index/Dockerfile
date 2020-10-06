@@ -9,13 +9,11 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 
+# override port variable to 443 to use ssl
+ENV PORT=8000 
 ENV NODE_ENV=production
 RUN npm install
 
 COPY . .
 
-ENV PORT=8000
-EXPOSE ${PORT}
-
-#ENV GITHUB_ACCESS_TOKEN=dummy
-CMD ["npm", "start"]
+CMD ["npm", "run", "prod"]
