@@ -1,8 +1,8 @@
 version: "3.7"
 services:
   api:
-    depends_on: 
-      - neo4j
+    #depends_on: 
+    #  - neo4j
     build: images/discovery-index
     image: oneilsh/discovery-index:0.1.3
     ports: 
@@ -16,18 +16,19 @@ services:
   neo4j:
     image: neo4j:3.5
     environment:
-      NEO4J_dbms_connector_https_advertised__address: discovery-index.dldna.info:8483
-      NEO4J_dbms_connector_https_listen__address: 0.0.0.0:8483
-      NEO4J_dbms_connector_http_advertised__address: discovery-index.dldna.info:8484
-      NEO4J_dbms_connector_http_listen__address: 0.0.0.0:8484
-      NEO4J_dbms_connector_bolt_advertised__address: discovery-index.dldna.info:8687
-      NEO4J_dbms_connector_bolt_advertised__address: 0.0.0.0:8687
       NEO4J_dbms_logs_debug_level: DEBUG
-    ports:
-      - "8483:8483"
-      - "8484:8484"
-      - "8687:8687"
+      NEO4J_dbms_ssl_policy_certs_base__directory: certificates/certs
+      NEO4J_dbms_ssl_policy_certs_client__auth: "NONE"
+      NEO4J_bolt_ssl__policy: certs
+      NEO4J_https_ssl__policy: certs
+    ports:  # these ports are mapped to ports on the host machine
+      - "7473:7473"
+      - "7687:7687"
+    expose: # these ports are only exposed to the docker service network (using non-ssl interface for internal traffic)
+      - "7474"
     env_file:
       - images/discovery-index/git-crypt/RUN_VARS
-
-
+    volumes:
+      - type: bind
+        target: /var/lib/neo4j/certificates/certs
+        source: ./images/discovery-index/git-crypt/certs

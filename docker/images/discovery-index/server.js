@@ -104,8 +104,8 @@ if(port != 443) {
 
 } else {
   var httpsServer = https.createServer({
-    key: fs.readFileSync('git-crypt/private.key'),
-    cert: fs.readFileSync('git-crypt/public.cert')
+    key: fs.readFileSync('git-crypt/certs/private.key'),
+    cert: fs.readFileSync('git-crypt/certs/public.cert')
   }, app)
 
   httpsServer.listen(port, () => {
