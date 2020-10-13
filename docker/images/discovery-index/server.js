@@ -7,13 +7,28 @@ var bodyParser = require('body-parser')
 var https = require('https')
 var fs = require('fs')
 
+var basicAuth = require('express-basic-auth')
+
 var { runCypher } = require('./lib/neo4j.js')
 var { updateGithub } = require('./lib/gitHub.js')
 var { updateOrcid } = require('./lib/orcid.js')
 var { updatePrimaryId } = require('./lib/general.js')
 
-// updateOrcid("0000-0001-6220-7080").then(res => console.log(res)).catch(e => console.log(e))
-// updateGithub("oneilsh").then(res => {console.log(res)}).catch(e => {})
+var api_insecure = process.env.API_INSECURE || "false"
+api_insecure = api_insecure === "true"
+
+// create an express router to handle endpoints under /admin
+// read admin username and password from vars
+var authRouter = express.Router()
+admin_user = process.env.API_ADMIN_USER || "admin"
+admin_password = process.env.API_ADMIN_PASSWORD || "admin"
+user_pass_map = {}
+user_pass_map[admin_user] = admin_password
+if(api_insecure) {
+  app.use('/admin', authRouter)
+} else {
+  app.use('/admin', basicAuth({users: user_pass_map}), authRouter)
+}
 
 // basic logging - call logger middleware regardless of method; it calls next() to pass process on to the next middlewares
 app.use(logger)
@@ -45,7 +60,14 @@ async function updateAll(req) {
   }
 }
 
-app.post('/updateuser', function(req, res) {
+// just for testing basicAuth, under /admin/testing
+authRouter.get('/testing', function(req, res) {
+  res.status(200).json({result: "Hey that tickles!"})
+})
+
+
+authRouter.post('/updateuser', function(req, res) {
+  
   if(req.body && req.body.primaryId) {
     updateAll(req)
       .then(result => {console.log(result); res.status(200).json(result)})
@@ -55,32 +77,6 @@ app.post('/updateuser', function(req, res) {
     res.status(400).json({err: "Error: must post json with at least primaryId field."})
   }
 })
-
-// next is optional?
-app.post('/newuser', function(req, res) {
-  // ensure the body has been parsed from JSON and there's a username attached
-  if(req.body && req.body.username) {
-    var query = "CREATE (n:Person { username : $username }) RETURN n"
-    var params =  {"username": req.body.username}
-    
-    runCypher(query, 
-              params, 
-              resp => {
-                res.status(200).json(resp)
-              }, err => {
-                res.status(400).json(err)
-                console.error("Cypher query error: ")
-                console.error(err)
-              })
-
-   } else {
-     res.status(400).json({err: "Error: Request needs a JSON body with username field."})
-   }
- })
- 
-
-
-
 
 
 // last resort if no previous route matched
@@ -92,20 +88,17 @@ app.use('*', function(req, res, next) {
 
 
 /////////   Run main proces
-var port = 443
-if(process.env.PORT) {
-  port = process.env.PORT
-}
+var port = process.env.API_PORT || 443
 
-if(port != 443) {
+if(api_insecure) {
   app.listen(port, function() {
-    console.log("== Server is listening on port " + port)
+    console.log("== Server is listening with http on port " + port)
   })
 
 } else {
   var httpsServer = https.createServer({
     key: fs.readFileSync('git-crypt/certs/private.key'),
-    cert: fs.readFileSync('git-crypt/certs/public.cert')
+    cert: fs.readFileSync('git-crypt/certs/public.crt')
   }, app)
 
   httpsServer.listen(port, () => {

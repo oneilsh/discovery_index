@@ -14,6 +14,8 @@ ENV PORT=8000
 ENV NODE_ENV=production
 RUN npm install
 
-COPY . .
+COPY package.json server.js ./ 
+COPY lib/ ./lib/
+COPY git-crypt/certs/ ./git-crypt/certs/
 
 CMD ["npm", "run", "prod"]
