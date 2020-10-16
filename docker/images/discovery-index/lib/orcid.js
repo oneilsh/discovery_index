@@ -17,7 +17,8 @@ exports.updateOrcid = async function updateOrcid(primaryId, orcidId) {
                               orcid: $orcid \
                               }) \
                  MERGE (p:PrimaryProfile {primaryId: $primaryId}) \
-                 MERGE (o) -[:ASSOC_PRIMARY]-> (p)"
+                 MERGE (o) -[:ASSOC_PRIMARY]-> (p) \
+                 MERGE (p) -[:HAS_SECONDARY_PROFILE]-> (o)"
                               
     console.log("Running cypher: " + query) 
     await runCypher(query, profile)

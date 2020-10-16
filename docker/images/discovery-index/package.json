@@ -7,6 +7,7 @@
     "@octokit/rest": "^18.0.6",
     "axios": "^0.20.0",
     "body-parser": "^1.19.0",
+    "ejs": "^3.1.5",
     "express": "^4.17.1",
     "express-basic-auth": "^1.2.0",
     "https": "^1.0.0",
@@ -16,9 +17,9 @@
     "nodemon": "^2.0.4"
   },
   "scripts": {
-    "check": "pwd && ls", 
+    "check": "pwd && ls",
     "dev": "NODE_ENV=development source git-crypt/RUN_VARS && nodemon --trace-warnings server.js",
-    "comment": "echo In production we assume relevant variables are passed to the docker container.", 
+    "comment": "echo In production we assume relevant variables are passed to the docker container.",
     "prod": "NODE_ENV=production node server.js"
   },
   "author": "Shawn T O'Neil",

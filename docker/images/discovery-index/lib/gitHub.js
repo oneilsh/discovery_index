@@ -34,7 +34,8 @@ exports.updateGithub = async function(primaryId, username) {
                  MERGE (u:URL {urlName: 'Blog', url: $blog}) \
                  MERGE (o) -[:HAS_URL]-> (u) \
                  MERGE (o) -[:ASSOC_PRIMARY]-> (p) \
-                 MERGE (u) -[:ASSOC_PRIMARY]-> (p)"
+                 MERGE (u) -[:ASSOC_PRIMARY]-> (p) \
+                 MERGE (p) -[:HAS_SECONDARY_PROFILE]-> (o)"
                                            
     await runCypher(query, record)
     

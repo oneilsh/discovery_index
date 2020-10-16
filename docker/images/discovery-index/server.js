@@ -6,6 +6,7 @@ var app = express()
 var bodyParser = require('body-parser')
 var https = require('https')
 var fs = require('fs')
+var path = require('path')
 
 var basicAuth = require('express-basic-auth')
 
@@ -13,6 +14,7 @@ var { runCypher } = require('./lib/neo4j.js')
 var { updateGithub } = require('./lib/gitHub.js')
 var { updateOrcid } = require('./lib/orcid.js')
 var { updatePrimaryId } = require('./lib/general.js')
+var { getUser } = require('./lib/utils.js')
 
 var api_insecure = process.env.API_INSECURE || "false"
 api_insecure = api_insecure === "true"
@@ -33,8 +35,15 @@ if(api_insecure) {
 // basic logging - call logger middleware regardless of method; it calls next() to pass process on to the next middlewares
 app.use(logger)
 
+
 // call this function for every request; if it sees application/json, it parses it and stores it in the req object before continuing on
 app.use(bodyParser.json())
+authRouter.use(bodyParser.json())
+
+// access files in static/ via /static/filename
+// __dirname is the location of this file
+app.use('/static', express.static(path.join(__dirname, 'static')))
+
 
 // just an async function so we can await multiple calls and concatenate the results for return
 // takes the request as given to express below
@@ -65,6 +74,14 @@ authRouter.get('/testing', function(req, res) {
   res.status(200).json({result: "Hey that tickles!"})
 })
 
+app.get('/user/:primaryId', function(req, res) {
+  var primaryId = req.params.primaryId
+  getUser(primaryId)
+    .then(result => {console.log(result); res.status(200).json(result)})
+    // TODO: don't return raw errors - can leak info (especially basic auth info in headers)
+    .catch(err => {console.log("um"); res.status(400).json(err)})
+ 
+})
 
 authRouter.post('/updateuser', function(req, res) {
   
@@ -74,15 +91,16 @@ authRouter.post('/updateuser', function(req, res) {
       .catch(err => {console.log(err); res.status(400).json(err)})
  
  } else {
-    res.status(400).json({err: "Error: must post json with at least primaryId field."})
+    console.log(req)
+    res.status(400).json({err: "Error: must post json with at least primaryId field. :-P"})
   }
 })
 
 
 // last resort if no previous route matched
-app.use('*', function(req, res, next) {
-  res.status(404).send({err: "The requested resource doesn't exist."})
-})
+//app.use('*', function(req, res, next) {
+//  res.status(404).send({err: "The requested resource doesn't exist."})
+//})
 
 
 
