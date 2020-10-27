@@ -18,7 +18,7 @@
   },
   "scripts": {
     "check": "pwd && ls",
-    "dev": "NODE_ENV=development source git-crypt/RUN_VARS && nodemon --trace-warnings server.js",
+    "dev": "NODE_ENV=development set -o allexport; source git-crypt/RUN_VARS; set +o allexport; nodemon --trace-warnings server.js",
     "comment": "echo In production we assume relevant variables are passed to the docker container.",
     "prod": "NODE_ENV=production node server.js"
   },
