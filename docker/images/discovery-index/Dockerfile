@@ -17,7 +17,6 @@ RUN npm install
 COPY package.json server.js ./ 
 COPY lib/ ./lib/
 COPY static/ ./static/
-COPY tpl/ ./tpl/
 COPY git-crypt/certs/ ./git-crypt/certs/
 
 CMD ["npm", "run", "prod"]
