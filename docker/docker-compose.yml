@@ -1,4 +1,8 @@
 version: "3.7"
+
+volumes:
+  neo4jstorage:
+
 services:
   api:
     #depends_on: 
@@ -14,6 +18,8 @@ services:
       - images/discovery-index/git-crypt/RUN_VARS
 
   neo4j:
+    volumes:
+      - neo4jstorage:/var/lib/neo4j
     image: neo4j:3.5
     environment:
       NEO4J_dbms_logs_debug_level: DEBUG
