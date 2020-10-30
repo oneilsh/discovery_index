@@ -9,8 +9,7 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-# override port variable to 443 to use ssl
-ENV PORT=8000 
+# set port variable to 443 to use ssl (in docker-compose file)
 ENV NODE_ENV=production
 RUN npm install
 
