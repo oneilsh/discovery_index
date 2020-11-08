@@ -16,6 +16,14 @@ services:
       - NEO_4J_ENDPOINT=http://neo4j:7474/db/data/cypher
     env_file:
       - images/discovery-index/git-crypt/RUN_VARS
+    command: npm run prod
+
+    volumes:
+      - type: bind
+        target: /usr/src/app/git-crypt/certs
+        source: ./images/discovery-index/git-crypt/certs
+
+
 
   neo4j:
     volumes:
