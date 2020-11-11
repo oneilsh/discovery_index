@@ -9,6 +9,8 @@ var height = $('#graphSvg').height()
 // select svg and center coordinates on 0, 0 in middle of drawing area
 var svg = d3.select('#graphSvg')
   .attr("viewBox", [-width / 2, -height / 2, width, height])
+var circleGroup = svg.append("g")
+var lineGroup = svg.append("g")
 
 //var nodes = [{id: "0", name: "Shawn"}, {id: "1", name: "Brandon"}, {id: "2", name: "Julie"}, {id: "3", name: "Melissa"}]
 //var links = [{source: "0", target: "1", value: 2}, {source: "1", target: "2", value: 4}]
@@ -95,7 +97,7 @@ function updateVis(nodes, edges) {
   simulation.force('link', d3.forceLink(edges).id(d => d.metadata.id))
 
 
-  var l = d3.select('svg')
+  var l = lineGroup
     .selectAll('line')
     .data(edges)
 
@@ -110,28 +112,53 @@ function updateVis(nodes, edges) {
     .attr("y2", d => d.target.y)
     .on('click', function(event, d) {edges.splice(edges.indexOf(d), 1)})
 
-  var u = d3.select('svg')
+  circleGroup
+    .selectAll('g group')
+    .data(nodes)
+    .join(enter => {
+      // var group = enter.append('g')
+      //   .attr('transform', d => "translate(" + d.x + "," + d.y + ")")
+       //  .classed('group', true)
+       enter
+       .append('circle')
+        .attr("fill", ageFill)
+        .attr("stroke", "white")
+        .attr("stroke-width", 2)
+        .attr("r", 10)
+        .attr("cx", d => d.x)
+        .attr("cy", d => d.y)
+        .call(drag(simulation))
+        .raise()
+    
+       //group.append('text') 
+       //  .text(d => d.metadata.id)
+  
+     })
+
+/*  circleGroup
     .selectAll('circle')
     .data(nodes)
+    .join(enter => enter.append('circle')) 
+    .attr("transform", d => "translate(" + d.x + "," + d.y + ")")
+    .attr("fill", ageFill)
+    .attr("stroke", "white")
+    .attr("stroke-width", 2)
+    .attr("r", 10)
+    .call(drag(simulation))
+    .raise()
+    //.on('click', function(event, d) {if(!event.defaultPrevented) console.log("check"); nodes.splice(nodes.indexOf(d), 1)})
+    //.on('click', function(event, d) {delNeighborhood(d)})
 
-  u
-   .join(enter => enter.append('circle')) 
-   .attr("fill", ageFill)
-   .attr("stroke", "white")
-   .attr("stroke-width", 2)
-   .attr("r", 10)
-   .attr('cx', d => d.x)
-   .attr('cy', d => d.y)
-   .call(drag(simulation))
-   //.on('click', function(event, d) {if(!event.defaultPrevented) console.log("check"); nodes.splice(nodes.indexOf(d), 1)})
-   //.on('click', function(event, d) {delNeighborhood(d)})
-   .raise()
-
-  u
+  circleGroup
+   .selectAll('text')
+   .data(nodes)
    .join(enter => enter.append('text'))
-   //.append('text')
+   //.attr("transform", d => "translate(" + d.x + "," + d.y + ")")
    .text(n => n.metadata.id)
-   .raise()
+   .attr("x", d => d.x)
+   .attr("y", d => d.y)
+   .raise()  */
+
 }
 
 function ageFill(d) {
