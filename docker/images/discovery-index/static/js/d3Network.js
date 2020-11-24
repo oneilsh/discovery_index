@@ -83,14 +83,6 @@ function delNeighborhood(d) {
   nodes = nodes.filter(n => n != d)
 }
 
-var simulation = d3.forceSimulation(nodes)
-  .force("link", d3.forceLink(edges).id(d => d.metadata.id)) 
-  .force("charge", d3.forceManyBody().strength(-100))
-  .force("center", d3.forceCenter(0, 0))
-  .force("collide", d3.forceCollide().radius(10))
-  //.force("charge", d3.forceManyBody().strength(-20).distanceMin(40))
-  .on("tick", ticked)
-
 
 function updateVis(nodes, edges) {
   simulation.nodes(nodes)
@@ -105,66 +97,85 @@ function updateVis(nodes, edges) {
     .join(enter => enter.append('line'))
     .attr('stroke', '#555555')
     .attr('stroke-width', 2)
-//    .attr('opacity', d => {Math.min(ageOpacity(d.source), ageOpacity(d.target))})
     .attr("x1", d => d.source.x)
     .attr("y1", d => d.source.y)
     .attr("x2", d => d.target.x)
     .attr("y2", d => d.target.y)
+    .attr("opacity", edgeAgeOpacity)
     .on('click', function(event, d) {edges.splice(edges.indexOf(d), 1)})
 
-  circleGroup
-    .selectAll('g group')
-    .data(nodes)
-    .join(enter => {
-      // var group = enter.append('g')
-      //   .attr('transform', d => "translate(" + d.x + "," + d.y + ")")
-       //  .classed('group', true)
-       enter
-       .append('circle')
-        .attr("fill", ageFill)
+
+
+  var node = circleGroup
+    .selectAll('g')
+    .data(nodes, d => d.metadata.id)
+    .join(function(enter) {
+      var g = enter.append('g')
+
+      g.append('circle')
+        .attr("fill", "white")
+        .attr("r", 15)
+      g.append('circle')
+        .attr("class", "opacityByAge")
+        .attr("fill", "teal")
         .attr("stroke", "white")
         .attr("stroke-width", 2)
-        .attr("r", 10)
-        .attr("cx", d => d.x)
-        .attr("cy", d => d.y)
-        .call(drag(simulation))
-        .raise()
-    
-       //group.append('text') 
-       //  .text(d => d.metadata.id)
-  
-     })
-
-/*  circleGroup
-    .selectAll('circle')
-    .data(nodes)
-    .join(enter => enter.append('circle')) 
+        .attr("r", 15)
+        .attr("opacity", ageOpacity)
+      g.append('text')
+        .attr("class", "opacityByAge")
+        .text(d => d.metadata.id)
+        .attr("dominant-baseline", "middle") // center vertically
+        .attr("text-anchor", "middle")       // center horizontally
+        .attr("opacity", ageOpacity)
+      return g
+    })
+    // all nodes:
     .attr("transform", d => "translate(" + d.x + "," + d.y + ")")
-    .attr("fill", ageFill)
-    .attr("stroke", "white")
-    .attr("stroke-width", 2)
-    .attr("r", 10)
     .call(drag(simulation))
-    .raise()
-    //.on('click', function(event, d) {if(!event.defaultPrevented) console.log("check"); nodes.splice(nodes.indexOf(d), 1)})
-    //.on('click', function(event, d) {delNeighborhood(d)})
+    //.on('click', (event, d) => {d.age = 1000; simulation.alpha(0.25).restart(); return d})
+    .on('click', (event, d) => {
+      var currentTarget = d3.select(event.currentTarget)
+      currentTarget.classed("fixed", !currentTarget.classed("fixed"))
 
-  circleGroup
-   .selectAll('text')
-   .data(nodes)
-   .join(enter => enter.append('text'))
-   //.attr("transform", d => "translate(" + d.x + "," + d.y + ")")
-   .text(n => n.metadata.id)
-   .attr("x", d => d.x)
-   .attr("y", d => d.y)
-   .raise()  */
+      if(!currentTarget.classed("fixed")) {
+       d.fx = null; d.fy = null
+       d3.select(event.currentTarget)
+          .selectAll('.popout')
+          .remove()
+      } else {
+       d.fx = d.x; d.fy = d.y;
+       d3.select(event.currentTarget)
+         .append('circle').attr('class', 'popout')
+           .attr('r', 8)
+           .raise()
+           .attr("transform", "translate(20, 0)")
+           .attr("transform", "rotate(90, -20, 0)")
+      }
+     })
+    //.on('mouseout', (event, d) => {
+    //   var selection = d3.select(event.currentTarget)
+    //     .selectAll('.popout')
+    //     .remove()
+    // })
+
+    circleGroup
+      .selectAll('g')
+      .selectAll('.opacityByAge')
+      .attr("opacity", ageOpacity)
+
+
+    circleGroup.raise()
 
 }
 
-function ageFill(d) {
-  var myColor = d3.scaleLinear().domain([0, 1]).range(["white", "teal"])
+function ageOpacity(d) {
   var point = 1 - Math.min((d.age || 0)/10, 1)
-  return myColor(point)
+  return point
+}
+
+function edgeAgeOpacity(e) {
+  return Math.min(ageOpacity(e.source), ageOpacity(e.target))
 }
 
 function ticked() {
@@ -196,6 +207,14 @@ var drag = function(simulation) {
    .on("end", dragEnded)
 
 }
+
+var simulation = d3.forceSimulation(nodes)
+  .force("link", d3.forceLink(edges).id(d => d.metadata.id)) 
+  .force("charge", d3.forceManyBody().strength(-100))
+  .force("center", d3.forceCenter(0, 0))
+  .force("collide", d3.forceCollide().radius(10))
+  //.force("charge", d3.forceManyBody().strength(-20).distanceMin(40))
+  .on("tick", ticked)
 
 
 
