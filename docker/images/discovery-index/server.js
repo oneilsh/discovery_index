@@ -52,6 +52,14 @@ async function updateAll(req) {
     if(!req.body.profile) { req.body.profile = {} }
     var resultMap = {}
     console.log("updating primary...")
+    // allow setting profile variables by entries prefixed by profile_ (makes ingestion from qualtrics easier)
+    for(var param in req.body) {
+      if(param.startsWith("profile_")) {
+        var newParam = param.replace(/^profile_/, "")
+        req.body.profile[newParam] = req.body[param]
+      }
+    }
+
     resultMap.primaryResult = await updatePrimaryId(req.body.primaryId, req.body.profile)
     
     if(req.body.githubId) {
