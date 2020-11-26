@@ -20,6 +20,20 @@ exports.updateGithub = async function(primaryId, username) {
 		record.repos = await getRepos(username)
     record.primaryId = primaryId
     
+    // delete primary relationships from orcid nodes to this profile
+    var query = "MATCH (n) -[r:ASSOC_PRIMARY]-> (p:PrimaryProfile {primaryId: $primaryId}) \
+                WHERE n.source = 'github' \
+                DELETE r"
+    console.log("Deleting GitHub relationships to profile " + primaryId) 
+    await runCypher(query, record)
+
+    // clean out nodes that no longer have an association with a primary
+    var query = "MATCH (n) \
+                WHERE NOT (n) -[:ASSOC_PRIMARY]-> (:PrimaryProfile) AND \
+                NOT (n:PrimaryProfile) \
+                DETACH DELETE n"
+    console.log("Deleting all nodes without any primary relationship.") 
+    await runCypher(query, record)
 
     // create node if not exist
     var query = "MERGE (o:GithubProfile {username: $login, \
@@ -28,10 +42,11 @@ exports.updateGithub = async function(primaryId, username) {
                               location: $location, \
                               followersCount: $followersCount, \
                               followingCount: $followingCount, \
-                              createdAt: $createdAt \
+                              createdAt: $createdAt, \
+                              source: 'github' \
                               }) \
                  MERGE (p:PrimaryProfile {primaryId: $primaryId}) \
-                 MERGE (u:URL {urlName: 'Blog', url: $blog}) \
+                 MERGE (u:URL {urlName: 'Blog', url: $blog, source: 'github'}) \
                  MERGE (o) -[:HAS_URL]-> (u) \
                  MERGE (o) -[:ASSOC_PRIMARY]-> (p) \
                  MERGE (u) -[:ASSOC_PRIMARY]-> (p) \
@@ -43,7 +58,7 @@ exports.updateGithub = async function(primaryId, username) {
                  MERGE (p:PrimaryProfile {primaryId: $primaryId}) \
                  WITH $followers as followers, o as o, p as p \
                    UNWIND followers as follower \
-                     MERGE (f:GithubProfile {username: follower}) \
+                     MERGE (f:GithubProfile {username: follower, source: 'github'}) \
                      MERGE (f)-[:FOLLOWS]->(o) \
                      MERGE (f)-[:ASSOC_PRIMARY]->(p) \
                  "
@@ -55,7 +70,7 @@ exports.updateGithub = async function(primaryId, username) {
                  MERGE (p:PrimaryProfile {primaryId: $primaryId}) \
                  WITH $following as following, o as o, p as p \
                    UNWIND following as followed \
-                     MERGE (f:GithubProfile {username: followed}) \
+                     MERGE (f:GithubProfile {username: followed, source: 'github'}) \
                      MERGE (o)-[:FOLLOWS]->(f) \
                      MERGE (f)-[:ASSOC_PRIMARY]->(p) \
                  "
@@ -79,10 +94,11 @@ exports.updateGithub = async function(primaryId, username) {
                                           pushedAt: repo.pushedAt, \
                                           forksCount: repo.forksCount, \
                                           openIssuesCount: repo.openIssuesCount, \
-                                          watchersCount: repo.watchersCount \
+                                          watchersCount: repo.watchersCount, \
+                                          source: 'github' \
                                           }) \
-                     MERGE (u:URL {url_name: 'repo', url: repo.url}) \
-                     MERGE (l:ProgrammingLanguage {name: repo.primaryLanguage}) \
+                     MERGE (u:URL {url_name: 'repo', url: repo.url, source: 'github'}) \
+                     MERGE (l:ProgrammingLanguage {name: repo.primaryLanguage, source: 'github'}) \
                      MERGE (o)-[:HAS_REPO]->(r) \
                      MERGE (r)-[:HAS_URL]->(u) \
                      MERGE (r)-[:HAS_PROGRAMMING_LANGUAGE {role: 'primary'}]->(l) \

@@ -10,7 +10,7 @@ exports.updatePrimaryId = async function(primaryId, profile) {
     var query = "MERGE (p:PrimaryProfile {primaryId: $primaryId}) \
                  SET p = $profile \
                  RETURN p "
-    console.log("Running cypher: " + query) 
+    //console.log("Running cypher: " + query) 
     var result = await runCypher(query, params)
     return profile
   } catch(e) {

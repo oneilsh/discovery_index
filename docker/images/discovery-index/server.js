@@ -62,20 +62,40 @@ async function updateAll(req) {
 
     resultMap.primaryResult = await updatePrimaryId(req.body.primaryId, req.body.profile)
     
-    if(req.body.githubId) {
+    if(req.body.githubId && req.body.githubId != "") {
       console.log("updating github...")
       resultMap.githubResult = await updateGithub(req.body.primaryId, req.body.githubId)
     }
-    if(req.body.orcidId) { 
+    if(req.body.orcidId && req.body.orcidId != "") { 
       console.log("updating orcid...")
       resultMap.ordicResult = await updateOrcid(req.body.primaryId, req.body.orcidId) 
     }
  
-    return resultMap
+    return req.body
   } catch(e) {
     throw e
   }
 }
+
+
+authRouter.post('/updateecho', function(req, res) {
+  console.log(req.body)
+  res.status(200).json(req.body)
+})
+
+authRouter.post('/updateuser', function(req, res) {
+  if(req.body && req.body.primaryId && req.body.primaryId != "") {
+    updateAll(req)
+      .then(result => {console.log(result); res.status(200).json(result)})
+      .catch(err => {console.log(err); res.status(400).json(err)})
+ 
+ } else {
+    console.log(req)
+    res.status(400).json({err: "Error: must post json with body containing non-empty primaryId string. :-P"})
+  }
+})
+
+
 
 // just for testing basicAuth, under /admin/testing
 authRouter.get('/testing', function(req, res) {
@@ -90,20 +110,6 @@ app.get('/user/:primaryId', function(req, res) {
     .catch(err => {console.log("um"); res.status(400).json(err)})
  
 })
-
-authRouter.post('/updateuser', function(req, res) {
-  
-  if(req.body && req.body.primaryId) {
-    updateAll(req)
-      .then(result => {console.log(result); res.status(200).json(result)})
-      .catch(err => {console.log(err); res.status(400).json(err)})
- 
- } else {
-    console.log(req)
-    res.status(400).json({err: "Error: must post json with at least primaryId field. :-P"})
-  }
-})
-
 
 // last resort if no previous route matched
 //app.use('*', function(req, res, next) {
