@@ -7,14 +7,17 @@ var bodyParser = require('body-parser')
 var https = require('https')
 var fs = require('fs')
 var path = require('path')
+var _ = require('lodash')
+var hash = require('object-hash')
 
 var basicAuth = require('express-basic-auth')
 
 var { runCypher } = require('./lib/neo4j.js')
 var { updateGithub } = require('./lib/gitHub.js')
 var { updateOrcid } = require('./lib/orcid.js')
-var { updatePrimaryId } = require('./lib/general.js')
-var { getUser } = require('./lib/utils.js')
+var { updateProfile, updateRelationships } = require('./lib/general.js')
+var { orNa, getUser } = require('./lib/utils.js')
+
 
 var api_insecure = process.env.API_INSECURE || "false"
 api_insecure = api_insecure === "true"
@@ -45,22 +48,60 @@ authRouter.use(bodyParser.json())
 app.use('/static', express.static(path.join(__dirname, 'static')))
 
 
+
+async function updateRelationshipsCanonical(primaryId, relationships) {
+  // it seems pushing new items onto relationships while iterating over it
+  // only iterates over the original set (rather than also covering
+  // items added mid-loop). this seems kind of hacky though - if this werent the case
+  // then hashes would be computed twice (once on add and once on later loop-over) with different results
+  // TODO: should probably change this to just loop over original indices to avoid any ambiguity
+  relationships.forEach( relationship => {
+    if(relationship.repeat) {
+      // using e.g. "for": "edge.properties.prop0"in the api would be nice; is there a _.set() that takes a path string? 
+ 
+      // extract property path to set entries, value, split
+      var property = relationship.repeat.property  // e.g. edge.properties.prop0
+      var values = relationship.repeat.values       // e.g. "value_1, value_2, value_3"
+      var splitChar = relationship.repeat.splitChar // e.g. ","
+      // create canonical template as deep copy, deleting "repeat" entry
+      var template = _.cloneDeep(relationship)
+      delete template.repeat
+      // for each entry in value split by split, create another canonical version from template and set property key to entry
+      var valuesArray = values.split(splitChar)
+      valuesArray.forEach(value => {
+        var newRelationship = _.cloneDeep(template)
+        _.set(newRelationship, property, value)
+        // append new canonical version to relationships list
+        newRelationship.edge.properties.hashId = hash(newRelationship.edge)
+        newRelationship.target.properties.hashId = hash(newRelationship.target)
+        relationships.push(newRelationship)
+      })
+    }
+
+    relationship.edge.properties.hashId = hash(relationship.edge)
+    relationship.target.properties.hashId = hash(relationship.target)
+  })
+
+
+  try {
+    // after adding cononical reversions of "repeat"-type relationships, we only really add the canonical versions
+    return updateRelationships(primaryId, _.filter(relationships, r => !r.repeat))
+  } catch(e) {
+    throw e
+  }
+}
+
 // just an async function so we can await multiple calls and concatenate the results for return
 // takes the request as given to express below
 async function updateAll(req) {
   try {
-    if(!req.body.profile) { req.body.profile = {} }
+    if(!req.body.relationships) { req.body.relationships = [] }
     var resultMap = {}
     console.log("updating primary...")
-    // allow setting profile variables by entries prefixed by profile_ (makes ingestion from qualtrics easier)
-    for(var param in req.body) {
-      if(param.startsWith("profile_")) {
-        var newParam = param.replace(/^profile_/, "")
-        req.body.profile[newParam] = req.body[param]
-      }
-    }
+    // allow setting profile variables by entries prefixed by relationship_ (makes ingestion from qualtrics easier)
 
-    resultMap.primaryResult = await updatePrimaryId(req.body.primaryId, req.body.profile)
+    resultMap.primaryResult = await updateProfile(req.body.primaryId, req.body.profile)
+    resultMap.relationships = await updateRelationshipsCanonical(req.body.primaryId, req.body.relationships)
     
     if(req.body.githubId && req.body.githubId != "") {
       console.log("updating github...")
