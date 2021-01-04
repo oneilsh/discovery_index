@@ -98,7 +98,13 @@ async function updateAll(req) {
     if(!req.body.relationships) { req.body.relationships = [] }
     var resultMap = {}
     console.log("updating primary...")
-    // allow setting profile variables by entries prefixed by relationship_ (makes ingestion from qualtrics easier)
+    // allow adding relationship entries by prefixing top-level request body elements with relationship_ (makes ingestion from qualtrics easier)
+    for(property in req.body) {
+      if(property.startsWith("relationship_")) {
+        req.body.relationships.push(req.body[property])
+        //delete req.body[property]
+      }
+    }
 
     resultMap.primaryResult = await updateProfile(req.body.primaryId, req.body.profile)
     resultMap.relationships = await updateRelationshipsCanonical(req.body.primaryId, req.body.relationships)
