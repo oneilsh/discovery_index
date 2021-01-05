@@ -96,6 +96,7 @@ async function updateRelationshipsCanonical(primaryId, relationships) {
 async function updateAll(req) {
   try {
     if(!req.body.relationships) { req.body.relationships = [] }
+    if(!req.body.profile) {req.body.profile = {}}
     var resultMap = {}
     console.log("updating primary...")
     // allow adding relationship entries by prefixing top-level request body elements with relationship_ (makes ingestion from qualtrics easier)
@@ -132,6 +133,8 @@ authRouter.post('/updateecho', function(req, res) {
 
 authRouter.post('/updateuser', function(req, res) {
   if(req.body && req.body.primaryId && req.body.primaryId != "") {
+    console.log("Request looks ok; req.body:")
+    console.log(req.body)
     updateAll(req)
       .then(result => {console.log(result); res.status(200).json(result)})
       .catch(err => {console.log(err); res.status(400).json(err)})
