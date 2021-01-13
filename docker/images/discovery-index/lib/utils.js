@@ -2,6 +2,7 @@ var { runCypher } = require('./neo4j.js')
 var axios = require('axios')
 var _ = require('lodash')
 
+
 exports.getUser = async function(id) {
   var query = "MATCH (p:PrimaryProfile {primaryId: $primaryId}) -[r]-> (s) return p, r, s"
   var params = {primaryId: id}
