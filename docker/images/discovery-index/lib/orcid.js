@@ -8,32 +8,18 @@ exports.updateOrcid = async function updateOrcid(primaryId, orcidId) {
     var works = await orcidWorks(orcidId)
     profile.works = works
     profile.primaryId = primaryId
-
-    // delete primary relationships from orcid nodes to this profile
-    var query = "MATCH (n) -[r:ASSOC_PRIMARY]-> (p:PrimaryProfile {primaryId: $primaryId}) \
-                WHERE n.source = 'orcid' \
-                DELETE r"
-    console.log("Deleting ORCID relationships to profile " + primaryId) 
-    await runCypher(query, profile)
-
-    // clean out nodes that no longer have an association with a primary
-    var query = "MATCH (n) \
-                WHERE NOT (n) -[:ASSOC_PRIMARY]-> (:PrimaryProfile) AND \
-                NOT (n:PrimaryProfile) \
-                DETACH DELETE n"
-    console.log("Deleting all nodes without any primary relationship.") 
-    await runCypher(query, profile)
+    
+    deleteBySource(primaryId, "orcid")
 
     // create node if not exist
     var query = "MERGE (o:OrcidProfile {firstName: $firstName, \
                               lastName: $lastName,   \
                               creditName: $creditName, \
                               bio: $bio, \
-                              orcid: $orcid, \
-                              source: 'orcid' \
+                              orcid: $orcid \
                               }) \
                  MERGE (p:PrimaryProfile {primaryId: $primaryId}) \
-                 MERGE (o) -[:ASSOC_PRIMARY]-> (p) \
+                 MERGE (o) -[:ASSOC_PRIMARY, {source: "orcid"}]-> (p) \
                  MERGE (p) -[:HAS_SECONDARY_PROFILE]-> (o)"
                               
     console.log("Merging PrimaryProfile information for " + primaryId) 
@@ -49,7 +35,7 @@ exports.updateOrcid = async function updateOrcid(primaryId, orcidId) {
                                    url: urlEntry.url, \
                                    soure: 'orcid'}) \
                      MERGE (o)-[:HAS_URL]->(u) \
-                     MERGE (u)-[:ASSOC_PRIMARY]->(p) \
+                     MERGE (u)-[:ASSOC_PRIMARY, {source: "orcid"}]->(p) \
                  "
     console.log("Merging ORCID URLs for " + primaryId) 
     await runCypher(query, profile)
@@ -59,9 +45,9 @@ exports.updateOrcid = async function updateOrcid(primaryId, orcidId) {
                  MERGE (p:PrimaryProfile {primaryId: $primaryId}) \
                  WITH $emails as emails, o as o, p as p \
                    UNWIND emails as emailEntry  \
-                     MERGE (e:Email {email: emailEntry, source: 'orcid'}) \
+                     MERGE (e:Email {email: emailEntry}) \
                      MERGE (o)-[:HAS_EMAIL]->(e) \
-                     MERGE (e)-[:ASSOC_PRIMARY]->(p) \
+                     MERGE (e)-[:ASSOC_PRIMARY, {source: "orcid"}]->(p) \
                  "
   
     console.log("Merging ORCID emails for " + primaryId) 
@@ -72,9 +58,9 @@ exports.updateOrcid = async function updateOrcid(primaryId, orcidId) {
                  MERGE (p:PrimaryProfile {primaryId: $primaryId}) \
                    WITH $keywords as keywords, o as o, p as p \
                    UNWIND keywords as keywordEntry  \
-                     MERGE (k:Keyword {keyword: keywordEntry, source: 'orcid'}) \
+                     MERGE (k:Keyword {keyword: keywordEntry}) \
                      MERGE (o)-[:HAS_KEYWORD]->(k) \
-                     MERGE (k)-[:ASSOC_PRIMARY]->(p) \
+                     MERGE (k)-[:ASSOC_PRIMARY, {source: "orcid"}]->(p) \
                  "
                  
     console.log("Merging ORCID keywords for " + primaryId) 
@@ -91,18 +77,17 @@ exports.updateOrcid = async function updateOrcid(primaryId, orcidId) {
                                     type: workEntry.type, \
                                     year: workEntry.pubYear, \
                                     month: workEntry.pubMonth, \
-                                    day: workEntry.pubDay, \
-                                    source: 'orcid' \
+                                    day: workEntry.pubDay \
                             }) \
                      MERGE (o)-[:HAS_WORK]->(w) \
-                     MERGE (w)-[:ASSOC_PRIMARY]->(p) \
+                     MERGE (w)-[:ASSOC_PRIMARY, {source: "orcid"}]->(p) \
                      WITH workEntry as workEntry, o as o, w as w, p as p \
                        UNWIND workEntry.externalIds as externalId \
                          MERGE (eid:ExternalId {type: externalId.type, \
-                                                id: externalId.id, \
-                                                source: 'orcid'}) \
+                                                id: externalId.id \
+                                                }) \
                          MERGE (w)-[:HAS_EXTERNAL_ID]->(eid) \
-                         MERGE (eid)-[:ASSOC_PRIMARY]->(p) \
+                         MERGE (eid)-[:ASSOC_PRIMARY, {source: "orcid"}]->(p) \
                  "
                  
     console.log("Merging ORCID works for " + primaryId) 
