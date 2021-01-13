@@ -13,7 +13,7 @@ exports.updateProfile = async function(primaryId, profile) {
     var query = "MERGE (p:PrimaryProfile {primaryId: $primaryId}) \
                  SET p = $profile \
                  RETURN p "
-    //console.log("Running cypher: " + query) 
+    //console.log("Running cypher: " + query)
     var result = await runCypher(query, params)
     return profile
   } catch(e) {
@@ -24,7 +24,7 @@ exports.updateProfile = async function(primaryId, profile) {
 exports.deleteBySource = async function(primaryId, source) {
   try {
     var params = {"primaryId": primaryId, "source": source}
-    
+
     var query = "MATCH (t) -[r:ASSOC_PRIMARY {source: $source}]-> (p:PrimaryProfile {primaryId:$primaryId}) \
                 DELETE r \
                 WITH t as t \
@@ -32,9 +32,9 @@ exports.deleteBySource = async function(primaryId, source) {
                   NOT (n) -[:ASSOC_PRIMARY]-> (:PrimaryProfile) AND \
                   NOT (n:PrimaryProfile) \
                   DETACH DELETE n"
-    concole.log("Removing relationships and nodes for primaryId " + primaryId + " from source " + source)
+    console.log("Removing relationships and nodes for primaryId " + primaryId + " from source " + source)
     await runCypher(query, params)
-  
+
   } catch(e) {
     throw(e)
   }
@@ -43,7 +43,7 @@ exports.deleteBySource = async function(primaryId, source) {
 async function updateRelationshipsCanonical(primaryId, relationships) {
   try {
     var params = {"primaryId": primaryId, "relationships": relationships}
- 
+
     /*
     The hashId and this merge, set, merge, set strategy allow for filling properties from an object (w/ set) but
     creating a new relationship or node where needed by merging on the hashId which summarizes all of the object info
@@ -55,11 +55,11 @@ async function updateRelationshipsCanonical(primaryId, relationships) {
                      SET t = relationship.target.properties \
                      WITH relationship as relationship, p as p, t as t \
                        MERGE (p) -[r:GENERIC_RELATIONSHIP {hashId: relationship.edge.properties.hashId}]-> (t) \
-                       MERGE (t) -[:ASSOC_PRIMARY {source: relationship.edge.properties.source}]-> (p) \
+                       MERGE (t) -[:ASSOC_PRIMARY {source: relationship.source}]-> (p) \
                        SET r = relationship.edge.properties"
-    
+
     var result = await runCypher(query, params)
-    return relationships 
+    return relationships
 
   } catch(e) {
     throw(e)
@@ -98,10 +98,10 @@ exports.updateRelationships = async function(primaryId, relationships) {
      before we do so, we ensure each relationship has a minimum structure:
      relationship:
        source: DEFAULT
-       edge: 
-         properties: 
-           type: DEFAULT 
-       target: 
+       edge:
+         properties:
+           type: DEFAULT
+       target:
          properties:
            type: DEFAULT
   */
@@ -142,5 +142,3 @@ exports.updateRelationships = async function(primaryId, relationships) {
     throw e
   }
 }
-
-

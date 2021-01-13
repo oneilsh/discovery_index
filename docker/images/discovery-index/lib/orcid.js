@@ -8,7 +8,7 @@ exports.updateOrcid = async function updateOrcid(primaryId, orcidId) {
     var works = await orcidWorks(orcidId)
     profile.works = works
     profile.primaryId = primaryId
-    
+
     deleteBySource(primaryId, "orcid")
 
     // create node if not exist
@@ -19,13 +19,13 @@ exports.updateOrcid = async function updateOrcid(primaryId, orcidId) {
                               orcid: $orcid \
                               }) \
                  MERGE (p:PrimaryProfile {primaryId: $primaryId}) \
-                 MERGE (o) -[:ASSOC_PRIMARY, {source: "orcid"}]-> (p) \
+                 MERGE (o) -[:ASSOC_PRIMARY, {source: 'orcid'}]-> (p) \
                  MERGE (p) -[:HAS_SECONDARY_PROFILE]-> (o)"
-                              
-    console.log("Merging PrimaryProfile information for " + primaryId) 
+
+    console.log("Merging PrimaryProfile information for " + primaryId)
     await runCypher(query, profile)
-  
-    
+
+
     // merge in urls
     var query = "MERGE (o:OrcidProfile {orcid: $orcid}) \
                  MERGE (p:PrimaryProfile {primaryId: $primaryId}) \
@@ -35,11 +35,11 @@ exports.updateOrcid = async function updateOrcid(primaryId, orcidId) {
                                    url: urlEntry.url, \
                                    soure: 'orcid'}) \
                      MERGE (o)-[:HAS_URL]->(u) \
-                     MERGE (u)-[:ASSOC_PRIMARY, {source: "orcid"}]->(p) \
+                     MERGE (u)-[:ASSOC_PRIMARY, {source: 'orcid'}]->(p) \
                  "
-    console.log("Merging ORCID URLs for " + primaryId) 
+    console.log("Merging ORCID URLs for " + primaryId)
     await runCypher(query, profile)
-    
+
     // merge in emails
     var query = "MERGE (o:OrcidProfile {orcid: $orcid}) \
                  MERGE (p:PrimaryProfile {primaryId: $primaryId}) \
@@ -47,12 +47,12 @@ exports.updateOrcid = async function updateOrcid(primaryId, orcidId) {
                    UNWIND emails as emailEntry  \
                      MERGE (e:Email {email: emailEntry}) \
                      MERGE (o)-[:HAS_EMAIL]->(e) \
-                     MERGE (e)-[:ASSOC_PRIMARY, {source: "orcid"}]->(p) \
+                     MERGE (e)-[:ASSOC_PRIMARY, {source: 'orcid'}]->(p) \
                  "
-  
-    console.log("Merging ORCID emails for " + primaryId) 
+
+    console.log("Merging ORCID emails for " + primaryId)
     await runCypher(query, profile)
-    
+
     // merge in keywords
     var query = "MERGE (o:OrcidProfile {orcid: $orcid}) \
                  MERGE (p:PrimaryProfile {primaryId: $primaryId}) \
@@ -60,12 +60,12 @@ exports.updateOrcid = async function updateOrcid(primaryId, orcidId) {
                    UNWIND keywords as keywordEntry  \
                      MERGE (k:Keyword {keyword: keywordEntry}) \
                      MERGE (o)-[:HAS_KEYWORD]->(k) \
-                     MERGE (k)-[:ASSOC_PRIMARY, {source: "orcid"}]->(p) \
+                     MERGE (k)-[:ASSOC_PRIMARY, {source: 'orcid'}]->(p) \
                  "
-                 
-    console.log("Merging ORCID keywords for " + primaryId) 
+
+    console.log("Merging ORCID keywords for " + primaryId)
     await runCypher(query, profile)
-  
+
     // merge in works
     var query = "MERGE (o:OrcidProfile {orcid: $orcid}) \
                  MERGE (p:PrimaryProfile {primaryId: $primaryId}) \
@@ -80,23 +80,23 @@ exports.updateOrcid = async function updateOrcid(primaryId, orcidId) {
                                     day: workEntry.pubDay \
                             }) \
                      MERGE (o)-[:HAS_WORK]->(w) \
-                     MERGE (w)-[:ASSOC_PRIMARY, {source: "orcid"}]->(p) \
+                     MERGE (w)-[:ASSOC_PRIMARY, {source: 'orcid'}]->(p) \
                      WITH workEntry as workEntry, o as o, w as w, p as p \
                        UNWIND workEntry.externalIds as externalId \
                          MERGE (eid:ExternalId {type: externalId.type, \
                                                 id: externalId.id \
                                                 }) \
                          MERGE (w)-[:HAS_EXTERNAL_ID]->(eid) \
-                         MERGE (eid)-[:ASSOC_PRIMARY, {source: "orcid"}]->(p) \
+                         MERGE (eid)-[:ASSOC_PRIMARY, {source: 'orcid'}]->(p) \
                  "
-                 
-    console.log("Merging ORCID works for " + primaryId) 
+
+    console.log("Merging ORCID works for " + primaryId)
     await runCypher(query, profile)
-  
+
     return profile
   } catch(e) {
     throw e
-  }  
+  }
 }
 
 
@@ -106,34 +106,34 @@ async function orcidPerson(orcidId, onResult, onError = console.error) {
   try {
     var result = await doGet("https://pub.orcid.org/v3.0/" + orcidId + "/person", headers)
     result = result.data
-  
+
     var record = {'orcid': orcidId}
     // using []-syntax as hyphens aren't suppored with .-syntax
     record.firstName = orNa(result, "name.given-names.value")
-    
+
     record.lastName = orNa(result, "name.family-name.value")
     record.creditName = orNa(result, "name.credit-name.value")
     record.bio = orNa(result, "biography.content")
     record.urls = []
-    
+
     result['researcher-urls']['researcher-url'].forEach(function(entry) {
       var urlMap = {}
       urlMap.urlName = orNa(entry, "url-name")
       urlMap.url = orNa(entry, "url.value")
       record.urls.push(urlMap)
     })
-    
+
     record.emails = []
     result.emails.email.forEach(function(entry) {
       record.emails.push(entry.email)
     })
-    
+
     record.keywords = []
     result.keywords.keyword.forEach(function(entry) {
       // TODO: parse keyword info
       record.keywords.push(entry.content)
     })
-    
+
     record.externalIds = []
     var externalIds = result['external-identifiers']['external-identifier'] || []
     externalIds.forEach(function(entry) {
@@ -165,19 +165,19 @@ async function orcidWorks(orcidId) {
       entry['external-ids']['external-id'].forEach(function(extId) {
         workMap.externalIds.push({'type': extId['external-id-type'], 'id': extId['external-id-value']})
       })
-      
+
       var mainSummary = entry['work-summary'][0]
-      
+
       workMap.title = orNa(mainSummary, "title.title.value")
       // TODO: subtitle?
       workMap.journalTitle = orNa(mainSummary, 'journal-title.value')
       workMap.type = orNa(mainSummary, 'type')
       workMap.url = orNa(mainSummary, 'url.value')
-      
+
       workMap.pubYear = orNa(mainSummary, 'publication-date.year.value')
       workMap.pubMonth = orNa(mainSummary, 'publication-date.month.value')
       workMap.pubDay = orNa(mainSummary, 'publication-date.month.day')
-      
+
       records.push(workMap)
     })
 

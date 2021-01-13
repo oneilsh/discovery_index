@@ -66,22 +66,22 @@ async function updateAll(req) {
 
     if(req.body.deleteBySource) {
       req.body.deleteBySource.forEach(source => {
-        deleteNodesBySource(req.body.primaryId, source)        
+        deleteBySource(req.body.primaryId, source)
       })
     }
 
     resultMap.primaryResult = await updateProfile(req.body.primaryId, req.body.profile)
     resultMap.relationships = await updateRelationships(req.body.primaryId, req.body.relationships)
-    
+
     if(req.body.githubId && req.body.githubId != "") {
       console.log("updating github...")
       resultMap.githubResult = await updateGithub(req.body.primaryId, req.body.githubId)
     }
-    if(req.body.orcidId && req.body.orcidId != "") { 
+    if(req.body.orcidId && req.body.orcidId != "") {
       console.log("updating orcid...")
-      resultMap.ordicResult = await updateOrcid(req.body.primaryId, req.body.orcidId) 
+      resultMap.ordicResult = await updateOrcid(req.body.primaryId, req.body.orcidId)
     }
- 
+
     return req.body
   } catch(e) {
     throw e
@@ -101,7 +101,7 @@ authRouter.post('/updateuser', function(req, res) {
     updateAll(req)
       .then(result => {console.log(result); res.status(200).json(result)})
       .catch(err => {console.log(err); res.status(400).json(err)})
- 
+
  } else {
     console.log(req)
     res.status(400).json({err: "Error: must post json with body containing non-empty primaryId string. :-P"})
@@ -121,16 +121,13 @@ app.get('/user/:primaryId', function(req, res) {
     .then(result => {console.log(result); res.status(200).json(result)})
     // TODO: don't return raw errors - can leak info (especially basic auth info in headers)
     .catch(err => {console.log("um"); res.status(400).json(err)})
- 
+
 })
 
 // last resort if no previous route matched
 //app.use('*', function(req, res, next) {
 //  res.status(404).send({err: "The requested resource doesn't exist."})
 //})
-
-
-
 
 /////////   Run main proces
 var port = process.env.API_PORT || 443
@@ -151,4 +148,3 @@ if(api_insecure) {
   })
 
 }
-
