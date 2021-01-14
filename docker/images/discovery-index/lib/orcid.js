@@ -1,5 +1,6 @@
 var { runCypher } = require('./neo4j.js')
 var { doGet, orNa } = require('./utils.js')
+var { deleteBySource } = require('./general.js')
 
 
 exports.updateOrcid = async function updateOrcid(primaryId, orcidId) {
@@ -19,8 +20,8 @@ exports.updateOrcid = async function updateOrcid(primaryId, orcidId) {
                               orcid: $orcid \
                               }) \
                  MERGE (p:PrimaryProfile {primaryId: $primaryId}) \
-                 MERGE (o) -[:ASSOC_PRIMARY, {source: 'orcid'}]-> (p) \
-                 MERGE (p) -[:HAS_SECONDARY_PROFILE]-> (o)"
+                 MERGE (o) -[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'orcid', primaryId: $primaryId}]-> (p) \
+                 MERGE (p) -[:HAS_SECONDARY_PROFILE {source: 'orcid', primaryId: $primaryId}]-> (o)"
 
     console.log("Merging PrimaryProfile information for " + primaryId)
     await runCypher(query, profile)
@@ -34,8 +35,8 @@ exports.updateOrcid = async function updateOrcid(primaryId, orcidId) {
                      MERGE (u:URL {urlName: urlEntry.urlName, \
                                    url: urlEntry.url, \
                                    soure: 'orcid'}) \
-                     MERGE (o)-[:HAS_URL]->(u) \
-                     MERGE (u)-[:ASSOC_PRIMARY, {source: 'orcid'}]->(p) \
+                     MERGE (o)-[:HAS_URL {source: 'orcid', primaryId: $primaryId}]->(u) \
+                     MERGE (u)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'orcid', primaryId: $primaryId}]->(p) \
                  "
     console.log("Merging ORCID URLs for " + primaryId)
     await runCypher(query, profile)
@@ -46,8 +47,8 @@ exports.updateOrcid = async function updateOrcid(primaryId, orcidId) {
                  WITH $emails as emails, o as o, p as p \
                    UNWIND emails as emailEntry  \
                      MERGE (e:Email {email: emailEntry}) \
-                     MERGE (o)-[:HAS_EMAIL]->(e) \
-                     MERGE (e)-[:ASSOC_PRIMARY, {source: 'orcid'}]->(p) \
+                     MERGE (o)-[:HAS_EMAIL {source: 'orcid', primaryId: $primaryId}]->(e) \
+                     MERGE (e)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'orcid', primaryId: $primaryId}]->(p) \
                  "
 
     console.log("Merging ORCID emails for " + primaryId)
@@ -59,8 +60,8 @@ exports.updateOrcid = async function updateOrcid(primaryId, orcidId) {
                    WITH $keywords as keywords, o as o, p as p \
                    UNWIND keywords as keywordEntry  \
                      MERGE (k:Keyword {keyword: keywordEntry}) \
-                     MERGE (o)-[:HAS_KEYWORD]->(k) \
-                     MERGE (k)-[:ASSOC_PRIMARY, {source: 'orcid'}]->(p) \
+                     MERGE (o)-[:HAS_KEYWORD {source: 'orcid', primaryId: $primaryId}]->(k) \
+                     MERGE (k)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'orcid', primaryId: $primaryId}]->(p) \
                  "
 
     console.log("Merging ORCID keywords for " + primaryId)
@@ -79,15 +80,15 @@ exports.updateOrcid = async function updateOrcid(primaryId, orcidId) {
                                     month: workEntry.pubMonth, \
                                     day: workEntry.pubDay \
                             }) \
-                     MERGE (o)-[:HAS_WORK]->(w) \
-                     MERGE (w)-[:ASSOC_PRIMARY, {source: 'orcid'}]->(p) \
+                     MERGE (o)-[:HAS_WORK {source: 'orcid', primaryId: $primaryId}]->(w) \
+                     MERGE (w)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'orcid', primaryId: $primaryId}]->(p) \
                      WITH workEntry as workEntry, o as o, w as w, p as p \
                        UNWIND workEntry.externalIds as externalId \
                          MERGE (eid:ExternalId {type: externalId.type, \
                                                 id: externalId.id \
                                                 }) \
-                         MERGE (w)-[:HAS_EXTERNAL_ID]->(eid) \
-                         MERGE (eid)-[:ASSOC_PRIMARY, {source: 'orcid'}]->(p) \
+                         MERGE (w)-[:HAS_EXTERNAL_ID {source: 'orcid', primaryId: $primaryId}]->(eid) \
+                         MERGE (eid)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'orcid', primaryId: $primaryId}]->(p) \
                  "
 
     console.log("Merging ORCID works for " + primaryId)

@@ -11,6 +11,7 @@
     "express": "^4.17.1",
     "express-basic-auth": "^1.2.0",
     "https": "^1.0.0",
+    "jsonschema": "^1.4.0",
     "lodash": "^4.17.20",
     "object-hash": "^2.1.1"
   },
@@ -22,7 +23,7 @@
     "permsfix": "sudo chown -R oneils:oneils git-crypt/certs",
     "dev": "export $(cat git-crypt/RUN_VARS | grep -vE '(^$)|(^#)' | xargs) && NODE_ENV=development sudo -E  ./node_modules/.bin/nodemon --trace-warnings server.js",
     "comment": "echo In production we assume relevant variables are passed to the docker container.",
-    "prod": "NODE_ENV=production node server.js"
+    "prod": "NODE_ENV=production node --trace-warnings server.js"
   },
   "author": "Shawn T O'Neil",
   "license": "MIT"

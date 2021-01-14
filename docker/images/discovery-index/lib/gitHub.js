@@ -34,10 +34,10 @@ exports.updateGithub = async function(primaryId, username) {
                               }) \
                  MERGE (p:PrimaryProfile {primaryId: $primaryId}) \
                  MERGE (u:URL {urlName: 'Blog', url: $blog}) \
-                 MERGE (o) -[:HAS_URL]-> (u) \
-                 MERGE (o) -[:ASSOC_PRIMARY {source: 'github'}]-> (p) \
-                 MERGE (u) -[:ASSOC_PRIMARY {source: 'github'}]-> (p) \
-                 MERGE (p) -[:HAS_SECONDARY_PROFILE]-> (o)"
+                 MERGE (o) -[:HAS_URL {source: 'github', primaryId: $primaryId}]-> (u) \
+                 MERGE (o) -[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'github', primaryId: $primaryId}]-> (p) \
+                 MERGE (u) -[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'github', primaryId: $primaryId}]-> (p) \
+                 MERGE (p) -[:HAS_SECONDARY_PROFILE {source: 'github', primaryId: $primaryId}]-> (o)"
 
     await runCypher(query, record)
 
@@ -46,8 +46,8 @@ exports.updateGithub = async function(primaryId, username) {
                  WITH $followers as followers, o as o, p as p \
                    UNWIND followers as follower \
                      MERGE (f:GithubProfile {username: follower}) \
-                     MERGE (f)-[:FOLLOWS]->(o) \
-                     MERGE (f)-[:ASSOC_PRIMARY, {source: 'github'}]->(p) \
+                     MERGE (f)-[:FOLLOWS {source: 'github', primaryId: $primaryId}]->(o) \
+                     MERGE (f)-[:ASSOC_PRIMARY{type: 'ASSOC_PRIMARY', source: 'github', primaryId: $primaryId}]->(p) \
                  "
 
     console.log("Running cypher: " + query)
@@ -58,8 +58,8 @@ exports.updateGithub = async function(primaryId, username) {
                  WITH $following as following, o as o, p as p \
                    UNWIND following as followed \
                      MERGE (f:GithubProfile {username: followed}) \
-                     MERGE (o)-[:FOLLOWS]->(f) \
-                     MERGE (f)-[:ASSOC_PRIMARY, {source: 'github'}]->(p) \
+                     MERGE (o)-[:FOLLOWS {source: 'github', primaryId: $primaryId}]->(f) \
+                     MERGE (f)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'github', primaryId: $primaryId}]->(p) \
                  "
 
     console.log("Running cypher: " + query)
@@ -85,12 +85,12 @@ exports.updateGithub = async function(primaryId, username) {
                                           }) \
                      MERGE (u:URL {url_name: 'repo', url: repo.url}) \
                      MERGE (l:ProgrammingLanguage {name: repo.primaryLanguage}) \
-                     MERGE (o)-[:HAS_REPO]->(r) \
-                     MERGE (r)-[:HAS_URL]->(u) \
-                     MERGE (r)-[:HAS_PROGRAMMING_LANGUAGE {role: 'primary'}]->(l) \
-                     MERGE (r)-[:ASSOC_PRIMARY, {source: 'github'}]->(p) \
-                     MERGE (u)-[:ASSOC_PRIMARY, {source: 'github'}]->(p) \
-                     MERGE (l)-[:ASSOC_PRIMARY, {source: 'github'}]->(p) \
+                     MERGE (o)-[:HAS_REPO {source: 'github', primaryId: $primaryId}]->(r) \
+                     MERGE (r)-[:HAS_URL {source: 'github', primaryId: $primaryId}]->(u) \
+                     MERGE (r)-[:HAS_PROGRAMMING_LANGUAGE {role: 'primary', source: 'github', primaryId: $primaryId}]->(l) \
+                     MERGE (r)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'github', primaryId: $primaryId}]->(p) \
+                     MERGE (u)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'github', primaryId: $primaryId}]->(p) \
+                     MERGE (l)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'github', primaryId: $primaryId}]->(p) \
                  "
 
     console.log("Running cypher: " + query)
@@ -104,9 +104,10 @@ exports.updateGithub = async function(primaryId, username) {
 
 async function getRepos(user) {
 	try {
-		var result = await octokit.request('GET /users/' + user + '/repos')
+    var result = await octokit.paginate('GET /users/{user}/repos', {user: user})
+    //var result = await octokit.paginate('GET /users/' + user + '/repos')
     var records = await Promise.all(
-  	  result.data.map(async function(entry) {
+  	  result.map(async function(entry) {
         var repo = {}
         repo.name = orNa(entry, "name")
         repo.url = entry.html_url
@@ -120,14 +121,15 @@ async function getRepos(user) {
         repo.openIssuesCount = entry.open_issues_count
         repo.watchersCount = entry.watchers
         // requests per repo - lots of extra calls for minimal info (this inner function doesn't need to be async unless these are called)
+        // also - these may be better as octokit.request rather than .paginate (not tested)
         /*repo.stargazers = []
-        var stargazers = await octokit.request('GET ' + entry.stargazers_url.replace("https://api.github.com", ""))
-        stargazers.data.forEach(function(gazer) {
+        var stargazers = await octokit.paginate('GET ' + entry.stargazers_url.replace("https://api.github.com", ""))
+        stargazers.forEach(function(gazer) {
           repo.stargazers.push(gazer.login)
         })
 
-        var languages_bytes = await octokit.request('GET ' + entry.languages_url.replace("https://api.github.com", ""))
-        repo.languages_bytes = languages_bytes.data*/
+        var languages_bytes = await octokit.paginate('GET ' + entry.languages_url.replace("https://api.github.com", ""))
+        repo.languages_bytes = languages_bytes*/
         return repo
       })
     )

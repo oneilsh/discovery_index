@@ -10,6 +10,9 @@ var path = require('path')
 var _ = require('lodash')
 
 var basicAuth = require('express-basic-auth')
+var validate = require('jsonschema').validate;
+console.log(validate(4, {"type": "number"}).valid);
+console.log(validate("4", {"type": "number"}).valid);
 
 var { runCypher } = require('./lib/neo4j.js')
 var { updateGithub } = require('./lib/gitHub.js')
@@ -65,9 +68,10 @@ async function updateAll(req) {
 
 
     if(req.body.deleteBySource) {
-      req.body.deleteBySource.forEach(source => {
-        deleteBySource(req.body.primaryId, source)
-      })
+      for(var i = 0; i < req.body.deleteBySource.length; i++) {
+        var source = req.body.deleteBySource[i]
+        await deleteBySource(req.body.primaryId, source)
+       }
     }
 
     resultMap.primaryResult = await updateProfile(req.body.primaryId, req.body.profile)
@@ -92,6 +96,18 @@ async function updateAll(req) {
 authRouter.post('/updateecho', function(req, res) {
   console.log(req.body)
   res.status(200).json(req.body)
+})
+
+authRouter.post('/update_relationship', function(req, res) {
+  if(req.body && req.body.primaryId && req.body.primaryId != "" && req.body.source && req.body.source != "") {
+    console.log("Request looks ok; req.body:")
+    console.log(req.body)
+
+ } else {
+    console.log(req)
+    res.status(400).json({err: "Error: must post json with body containing non-empty primaryId and source strings. :-P"})
+  }
+
 })
 
 authRouter.post('/updateuser', function(req, res) {

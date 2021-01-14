@@ -25,9 +25,11 @@ exports.deleteBySource = async function(primaryId, source) {
   try {
     var params = {"primaryId": primaryId, "source": source}
 
-    var query = "MATCH (t) -[r:ASSOC_PRIMARY {source: $source}]-> (p:PrimaryProfile {primaryId:$primaryId}) \
+    // delete all relationships with the given source and primaryId
+    // then find all nodes without an ASSOC_PRIMARY relationship to a primary profile and delete them
+    var query = "MATCH (s) -[r {source: $source, primaryId: $primaryId}]-> (t) \
                 DELETE r \
-                WITH t as t \
+                WITH r as r \
                   MATCH (n) WHERE \
                   NOT (n) -[:ASSOC_PRIMARY]-> (:PrimaryProfile) AND \
                   NOT (n:PrimaryProfile) \
@@ -44,6 +46,9 @@ async function updateRelationshipsCanonical(primaryId, relationships) {
   try {
     var params = {"primaryId": primaryId, "relationships": relationships}
 
+    relationships.forEach(relationship => {
+      relationship.primaryId = primaryId
+    })
     /*
     The hashId and this merge, set, merge, set strategy allow for filling properties from an object (w/ set) but
     creating a new relationship or node where needed by merging on the hashId which summarizes all of the object info
@@ -55,8 +60,10 @@ async function updateRelationshipsCanonical(primaryId, relationships) {
                      SET t = relationship.target.properties \
                      WITH relationship as relationship, p as p, t as t \
                        MERGE (p) -[r:GENERIC_RELATIONSHIP {hashId: relationship.edge.properties.hashId}]-> (t) \
-                       MERGE (t) -[:ASSOC_PRIMARY {source: relationship.source}]-> (p) \
-                       SET r = relationship.edge.properties"
+                       MERGE (t) -[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: relationship.source, primaryId: relationship.primaryId}]-> (p) \
+                       SET r = relationship.edge.properties \
+                       SET r.source = relationship.source \
+                       SET r.primaryId = relationship.primaryId"
 
     var result = await runCypher(query, params)
     return relationships
@@ -139,6 +146,6 @@ exports.updateRelationships = async function(primaryId, relationships) {
     // after adding cononical reversions of "repeat"-type relationships, we only really add the canonical versions
     return updateRelationshipsCanonical(primaryId, canonicalRelationships)
   } catch(e) {
-    throw e
+    throw(e)
   }
 }

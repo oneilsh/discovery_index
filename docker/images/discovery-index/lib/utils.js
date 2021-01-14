@@ -2,6 +2,11 @@ var { runCypher } = require('./neo4j.js')
 var axios = require('axios')
 var _ = require('lodash')
 
+/*var crypto = require('crypto')
+
+exports.getSourceHash = function(primaryId, source) {
+  return crypto.createHash('sha256').update(primaryId + source).digest('hex')
+}*/
 
 exports.getUser = async function(id) {
   var query = "MATCH (p:PrimaryProfile {primaryId: $primaryId}) -[r]-> (s) return p, r, s"
@@ -15,7 +20,7 @@ exports.getUser = async function(id) {
 }
 
 
-// usage: 
+// usage:
 // test = {a: 1, b: null}
 // orNa(test, "a") returns 1
 // orNa(test, "b") return "NA"
