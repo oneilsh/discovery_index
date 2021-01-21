@@ -10,10 +10,12 @@ exports.updateProfile = async function(primaryId, profile) {
 
     profile.primaryId = primaryId
     var params = {"primaryId": primaryId, "profile": profile}
-    var query = "MERGE (p:PrimaryProfile {primaryId: $primaryId}) \
-                 SET p = $profile \
-                 RETURN p "
-    //console.log("Running cypher: " + query)
+    var query = `
+MERGE (p:PrimaryProfile {primaryId: $primaryId})
+SET p = $profile
+RETURN p
+`
+
     var result = await runCypher(query, params)
     return profile
   } catch(e) {
@@ -27,13 +29,15 @@ deleteBySource = exports.deleteBySource = async function(primaryId, source) {
 
     // delete all relationships with the given source and primaryId
     // then find all nodes without an ASSOC_PRIMARY relationship to a primary profile and delete them
-    var query = "MATCH (s) -[r {source: $source, primaryId: $primaryId}]-> (t) \
-                DELETE r \
-                WITH r as r \
-                  MATCH (n) WHERE \
-                  NOT (n) -[:ASSOC_PRIMARY]-> (:PrimaryProfile) AND \
-                  NOT (n:PrimaryProfile) \
-                  DETACH DELETE n"
+    var query = `
+MATCH (s) -[r {source: $source, primaryId: $primaryId}]-> (t)
+DELETE r
+WITH r as r
+  MATCH (n) WHERE
+  NOT (n) -[:ASSOC_PRIMARY]-> (:PrimaryProfile) AND
+  NOT (n:PrimaryProfile)
+  DETACH DELETE n
+`
     console.log("Removing relationships and nodes for primaryId " + primaryId + " from source " + source)
     await runCypher(query, params)
 
@@ -53,17 +57,19 @@ async function updateRelationshipsCanonical(primaryId, relationships, edgeLabel 
     The hashId and this merge, set, merge, set strategy allow for filling properties from an object (w/ set) but
     creating a new relationship or node where needed by merging on the hashId which summarizes all of the object info
     */
-    var query = "MERGE (p:PrimaryProfile {primaryId: $primaryId}) \
-                 WITH $primaryId AS primaryId, $relationships AS relationships, p as p \
-                   UNWIND relationships AS relationship \
-                     MERGE (t:" + nodeLabels + " {hashId: relationship.target.properties.hashId}) \
-                     SET t = relationship.target.properties \
-                     WITH relationship as relationship, p as p, t as t \
-                       MERGE (p) -[r:" + edgeLabel + " {hashId: relationship.edge.properties.hashId}]-> (t) \
-                       MERGE (t) -[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: relationship.source, primaryId: relationship.primaryId}]-> (p) \
-                       SET r = relationship.edge.properties \
-                       SET r.source = relationship.source \
-                       SET r.primaryId = relationship.primaryId"
+    var query = `
+MERGE (p:PrimaryProfile {primaryId: $primaryId})
+WITH $primaryId AS primaryId, $relationships AS relationships, p as p
+ UNWIND relationships AS relationship
+   MERGE (t:${nodeLabels} {hashId: relationship.target.properties.hashId})
+   SET t = relationship.target.properties
+   WITH relationship as relationship, p as p, t as t
+     MERGE (p) -[r:${edgeLabel} {hashId: relationship.edge.properties.hashId}]-> (t)
+     MERGE (t) -[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: relationship.source, primaryId: relationship.primaryId}]-> (p)
+     SET r = relationship.edge.properties
+     SET r.source = relationship.source
+     SET r.primaryId = relationship.primaryId
+     `
 
     var result = await runCypher(query, params)
     return relationships

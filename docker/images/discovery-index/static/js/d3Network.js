@@ -1,6 +1,5 @@
-/*console.log("alkjsdf")
+/*
 d3.selectAll("p").style("color", function() {
-  console.log("checking")
   return "hsl(" + Math.random() * 360 + ",100%,50%)";
 });*/
 
@@ -15,10 +14,10 @@ var lineGroup = svg.append("g")
 //var nodes = [{id: "0", name: "Shawn"}, {id: "1", name: "Brandon"}, {id: "2", name: "Julie"}, {id: "3", name: "Melissa"}]
 //var links = [{source: "0", target: "1", value: 2}, {source: "1", target: "2", value: 4}]
 var nodes = [
-             {metadata: {id: "0", labels: ["PrimaryProfile"]}, data: {primaryId: "oneils"}}, 
-             {metadata: {id: "1", labels: ["GithubProfile"]}, data: {username: "oneilsh"}}, 
-             {metadata: {id: "2", labels: ["PrimaryProfile"]}, data: {}}, 
-             {metadata: {id: "3", labels: ["OrcidProfile"]}, data: {primaryId: "0000-0020-0020-0020", firstName: "James", lastName: "Smith"}} 
+             {metadata: {id: "0", labels: ["PrimaryProfile"]}, data: {primaryId: "oneils"}},
+             {metadata: {id: "1", labels: ["GithubProfile"]}, data: {username: "oneilsh"}},
+             {metadata: {id: "2", labels: ["PrimaryProfile"]}, data: {}},
+             {metadata: {id: "3", labels: ["OrcidProfile"]}, data: {primaryId: "0000-0020-0020-0020", firstName: "James", lastName: "Smith"}}
             ]
 var edges = [
              {metadata: {id: "7", type: "HAS_SECONDARY_PROFILE", data: {ofType: "GitHub"}}, source: "0", target: "1"},
@@ -38,21 +37,21 @@ function addNode() {
 
   // age the nodes
   nodes = nodes.map(d => {
-    d.age = (d.age || 0) + 1; 
+    d.age = (d.age || 0) + 1;
     if(d.age < 10) {
       return d
     } else {
       delNeighborhood(d)
     }
   }).filter(n => n)   // undefined will be filtered as evaulating falsy
-  
+
   //nodes = nodes.filter(n => {})
-  
+
   // get the simulation to initialize edges with node references sourced from the ID strings given
   simulation.nodes(nodes)
   simulation.force('link').links(edges)
-  
-  simulation.alpha(0.25).restart() 
+
+  simulation.alpha(0.25).restart()
 }
 
 // returns an array of [nodes, edges] connected to the given node
@@ -63,9 +62,9 @@ function getNeighborhood(d) {
        return e.source
      } else {
        return e.target
-     }    
+     }
   })
-  
+
   return [neighbors, links]
 }
 
@@ -209,7 +208,7 @@ var drag = function(simulation) {
 }
 
 var simulation = d3.forceSimulation(nodes)
-  .force("link", d3.forceLink(edges).id(d => d.metadata.id)) 
+  .force("link", d3.forceLink(edges).id(d => d.metadata.id))
   .force("charge", d3.forceManyBody().strength(-100))
   .force("center", d3.forceCenter(0, 0))
   .force("collide", d3.forceCollide().radius(10))
@@ -219,4 +218,3 @@ var simulation = d3.forceSimulation(nodes)
 
 
 updateVis(nodes, edges)
-

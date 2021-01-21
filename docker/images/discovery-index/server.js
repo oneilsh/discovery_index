@@ -57,7 +57,6 @@ async function updateAll(req) {
     if(!req.body.relationships) { req.body.relationships = [] }
     if(!req.body.profile) {req.body.profile = {}}
     var resultMap = {}
-    console.log("updating primary...")
     // allow adding relationship entries by prefixing top-level request body elements with relationship_ (makes ingestion from qualtrics easier)
     for(property in req.body) {
       if(property.startsWith("relationship_")) {
@@ -77,11 +76,9 @@ async function updateAll(req) {
     resultMap.relationships = await updateRelationships(req.body.primaryId, req.body.relationships)
 
     if(req.body.githubId && req.body.githubId != "") {
-      console.log("updating github...")
       resultMap.githubResult = await updateGithub(req.body.primaryId, req.body.githubId)
     }
     if(req.body.orcidId && req.body.orcidId != "") {
-      console.log("updating orcid...")
       resultMap.ordicResult = await updateOrcid(req.body.primaryId, req.body.orcidId)
     }
 
@@ -92,23 +89,22 @@ async function updateAll(req) {
 }
 
 
-authRouter.post('/echo', function(req, res) {
-  console.log(req.body)
-  res.status(200).json(req.body)
-})
 
 
-/*
-// Update GitHub information
-*/
+
+
+///////////////////////////////////////
+//     UPDATE RELATIONSHIP VIA API
+///////////////////////////////////////
+
 var update_relationship_schema = JSON.parse(fs.readFileSync('./static/schemas/update_relationship.json'))
 
 authRouter.post('/update_relationship', function(req, res) {
   var validate_result = validate(req.body, update_relationship_schema)
   if(validate_result.valid) {
     updateRelationshipFromApi(req.body)
-      .then(result => {console.log(result); res.status(200).json(result)})
-      .catch(result => {console.log(result); res.status(400).json(result)})
+      .then(result => { res.status(200).json(result) })
+      .catch(result => { res.status(400).json(result) })
 
   } else {
     res.status(400).json({ "jsonschemaError": validate_result })
@@ -116,6 +112,9 @@ authRouter.post('/update_relationship', function(req, res) {
 
 })
 
+///////////////////////////////////////
+//     UPDATE GITHUB
+///////////////////////////////////////
 
 var update_github_schema = JSON.parse(fs.readFileSync('./static/schemas/update_github.json'))
 
@@ -123,8 +122,8 @@ authRouter.post('/update_github', function(req, res) {
   var validate_result = validate(req.body, update_github_schema)
   if(validate_result.valid) {
     updateGithub(req.body.primaryId, req.body.username)
-      .then(result => {console.log(result); res.status(200).json(result)})
-      .catch(result => {console.log(result); res.status(400).json(result)})
+      .then(result => {res.status(200).json(result)})
+      .catch(result => {res.status(400).json(result)})
 
   } else {
     res.status(400).json({ "jsonschemaError": validate_result })
@@ -132,19 +131,70 @@ authRouter.post('/update_github', function(req, res) {
 
 })
 
+///////////////////////////////////////
+//     UPDATE ORCID
+///////////////////////////////////////
+
+var update_orcid_schema = JSON.parse(fs.readFileSync('./static/schemas/update_orcid.json'))
+
+authRouter.post('/update_orcid', function(req, res) {
+  var validate_result = validate(req.body, update_orcid_schema)
+  if(validate_result.valid) {
+    updateOrcid(req.body.primaryId, req.body.orcidId)
+      .then(result => {res.status(200).json(result)})
+      .catch(result => {res.status(400).json(result)})
+
+  } else {
+    res.status(400).json({ "jsonschemaError": validate_result })
+  }
+
+})
+
+///////////////////////////////////////
+//     UPDATE PROFILE
+///////////////////////////////////////
+
+var update_profile_schema = JSON.parse(fs.readFileSync('./static/schemas/update_profile.json'))
+
+authRouter.post('/update_profile', function(req, res) {
+  var validate_result = validate(req.body, update_profile_schema)
+  if(validate_result.valid) {
+    updateProfile(req.body.primaryId, req.body.profile)
+      .then(result => {res.status(200).json(result)})
+      .catch(result => {res.status(400).json(result)})
+
+  } else {
+    res.status(400).json({ "jsonschemaError": validate_result })
+  }
+
+})
+
+
+
+
+/*
+// debugs & tests
+au
+thRouter.post('/echo', function(req, res) {
+  console.log(req.body)
+  res.status(200).json(req.body)
+})
+
 app.get('/user/:primaryId', function(req, res) {
   var primaryId = req.params.primaryId
   getUser(primaryId)
-    .then(result => {console.log(result); res.status(200).json(result)})
+    .then(result => {res.status(200).json(result)})
     // TODO: don't return raw errors - can leak info (especially basic auth info in headers)
-    .catch(err => {console.log("um"); res.status(400).json(err)})
+    .catch(err => {res.status(400).json(err)})
 
 })
+*/
 
 // last resort if no previous route matched
 //app.use('*', function(req, res, next) {
 //  res.status(404).send({err: "The requested resource doesn't exist."})
 //})
+
 
 /////////   Run main proces
 var port = process.env.API_PORT || 443
