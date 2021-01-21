@@ -11,14 +11,13 @@ var _ = require('lodash')
 
 var basicAuth = require('express-basic-auth')
 var validate = require('jsonschema').validate;
-console.log(validate(4, {"type": "number"}).valid);
-console.log(validate("4", {"type": "number"}).valid);
 
 var { runCypher } = require('./lib/neo4j.js')
 var { updateGithub } = require('./lib/gitHub.js')
 var { updateOrcid } = require('./lib/orcid.js')
-var { updateProfile, updateRelationships, deleteBySource } = require('./lib/general.js')
+var { updateProfile, updateRelationships, deleteBySource, updateRelationshipFromApi } = require('./lib/general.js')
 var { orNa, getUser } = require('./lib/utils.js')
+
 
 
 var api_insecure = process.env.API_INSECURE || "false"
@@ -93,42 +92,44 @@ async function updateAll(req) {
 }
 
 
-authRouter.post('/updateecho', function(req, res) {
+authRouter.post('/echo', function(req, res) {
   console.log(req.body)
   res.status(200).json(req.body)
 })
 
+
+/*
+// Update GitHub information
+*/
+var update_relationship_schema = JSON.parse(fs.readFileSync('./static/schemas/update_relationship.json'))
+
 authRouter.post('/update_relationship', function(req, res) {
-  if(req.body && req.body.primaryId && req.body.primaryId != "" && req.body.source && req.body.source != "") {
-    console.log("Request looks ok; req.body:")
-    console.log(req.body)
-
- } else {
-    console.log(req)
-    res.status(400).json({err: "Error: must post json with body containing non-empty primaryId and source strings. :-P"})
-  }
-
-})
-
-authRouter.post('/updateuser', function(req, res) {
-  if(req.body && req.body.primaryId && req.body.primaryId != "") {
-    console.log("Request looks ok; req.body:")
-    console.log(req.body)
-    updateAll(req)
+  var validate_result = validate(req.body, update_relationship_schema)
+  if(validate_result.valid) {
+    updateRelationshipFromApi(req.body)
       .then(result => {console.log(result); res.status(200).json(result)})
-      .catch(err => {console.log(err); res.status(400).json(err)})
+      .catch(result => {console.log(result); res.status(400).json(result)})
 
- } else {
-    console.log(req)
-    res.status(400).json({err: "Error: must post json with body containing non-empty primaryId string. :-P"})
+  } else {
+    res.status(400).json({ "jsonschemaError": validate_result })
   }
+
 })
 
 
+var update_github_schema = JSON.parse(fs.readFileSync('./static/schemas/update_github.json'))
 
-// just for testing basicAuth, under /admin/testing
-authRouter.get('/testing', function(req, res) {
-  res.status(200).json({result: "Hey that tickles!"})
+authRouter.post('/update_github', function(req, res) {
+  var validate_result = validate(req.body, update_github_schema)
+  if(validate_result.valid) {
+    updateGithub(req.body.primaryId, req.body.username)
+      .then(result => {console.log(result); res.status(200).json(result)})
+      .catch(result => {console.log(result); res.status(400).json(result)})
+
+  } else {
+    res.status(400).json({ "jsonschemaError": validate_result })
+  }
+
 })
 
 app.get('/user/:primaryId', function(req, res) {

@@ -21,7 +21,7 @@ exports.updateProfile = async function(primaryId, profile) {
   }
 }
 
-exports.deleteBySource = async function(primaryId, source) {
+deleteBySource = exports.deleteBySource = async function(primaryId, source) {
   try {
     var params = {"primaryId": primaryId, "source": source}
 
@@ -42,7 +42,7 @@ exports.deleteBySource = async function(primaryId, source) {
   }
 }
 
-async function updateRelationshipsCanonical(primaryId, relationships) {
+async function updateRelationshipsCanonical(primaryId, relationships, edgeLabel = "GENERIC_RELATIONSHIP", nodeLabels = "GENERIC_NODE") {
   try {
     var params = {"primaryId": primaryId, "relationships": relationships}
 
@@ -56,10 +56,10 @@ async function updateRelationshipsCanonical(primaryId, relationships) {
     var query = "MERGE (p:PrimaryProfile {primaryId: $primaryId}) \
                  WITH $primaryId AS primaryId, $relationships AS relationships, p as p \
                    UNWIND relationships AS relationship \
-                     MERGE (t:GENERIC_NODE {hashId: relationship.target.properties.hashId}) \
+                     MERGE (t:" + nodeLabels + " {hashId: relationship.target.properties.hashId}) \
                      SET t = relationship.target.properties \
                      WITH relationship as relationship, p as p, t as t \
-                       MERGE (p) -[r:GENERIC_RELATIONSHIP {hashId: relationship.edge.properties.hashId}]-> (t) \
+                       MERGE (p) -[r:" + edgeLabel + " {hashId: relationship.edge.properties.hashId}]-> (t) \
                        MERGE (t) -[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: relationship.source, primaryId: relationship.primaryId}]-> (p) \
                        SET r = relationship.edge.properties \
                        SET r.source = relationship.source \
@@ -73,18 +73,27 @@ async function updateRelationshipsCanonical(primaryId, relationships) {
   }
 }
 
-exports.updateRelationships = async function(primaryId, relationships) {
-  // it seems pushing new items onto relationships while iterating over it
-  // only iterates over the original set (rather than also covering
-  // items added mid-loop). this seems kind of hacky though - if this werent the case
-  // then hashes would be computed twice (once on add and once on later loop-over) with different results
-  // TODO: should probably change this to just loop over original indices to avoid any ambiguity
-  canonicalRelationships = []
-  relationships.forEach( relationship => {
+// should get JSON body matching update_relationship schema
+// required: primaryId, source, edge.label, target.labels
+// optional: repeat, convert, clearFirst
+exports.updateRelationshipFromApi = async function(relationship) {
+  try {
+    if(relationship.clearFirst) {
+      await deleteBySource(relationship.primaryId, relationship.source)
+    }
+
+    // make sure properties exists at least even if empty
+    relationship.target.properties = _.get(relationship, "target.properties", {})
+    relationship.edge.properties = _.get(relationship, "edge.properties", {})
+
+    canonicalRelationships = []
+
     if(relationship.repeat) {
       // extract property path to set entries, value, split
       var property = relationship.repeat.property  // e.g. edge.properties.prop0
-      var values = relationship.repeat.values       // e.g. "value_1, value_2, value_3"
+      var values = _.get(relationship, property, null)       // e.g. "value_1, value_2, value_3"
+      if(!values) {throw({"error": property + " is not a valid path in input.", "input": relationship})}
+
       var splitChar = relationship.repeat.splitChar // e.g. ","
       // create canonical template as deep copy, deleting "repeat" entry
       var template = _.cloneDeep(relationship)
@@ -99,53 +108,32 @@ exports.updateRelationships = async function(primaryId, relationships) {
     } else {
       canonicalRelationships.push(relationship)
     }
-  })
 
-  /* now for all canonical relationships, we want to produce a hashId as a uniqueifying value for proper merge based on the objects
-     before we do so, we ensure each relationship has a minimum structure:
-     relationship:
-       source: DEFAULT
-       edge:
-         properties:
-           type: DEFAULT
-       target:
-         properties:
-           type: DEFAULT
-  */
+    canonicalRelationships.forEach(relationship => {
+      if(relationship.convert) {
+        for(path in relationship.convert) {
+          var value = _.get(relationship, path, null)
+          if(!value) {throw({"error": property + " is not a valid path in input.", "input": relationship})}
 
-  canonicalRelationships.forEach(relationship => {
-    // there's gotta be a nicer way to do this...
-    relationship.source = _.get(relationship, "source", "DEFAULT")
-    relationship.target = _.get(relationship, "target", {"properties": {"type": "DEFAULT"}})
-    relationship.edge = _.get(relationship, "edge", {"properties": {"type": "DEFAULT"}})
-    relationship.target.properties = _.get(relationship, "target.properties", {"type": "DEFAULT"})
-    relationship.edge.properties = _.get(relationship, "edge.properties", {"type": "DEFAULT"})
-    relationship.target.properties.type = _.get(relationship, "target.properties.type", "DEFAULT")
-    relationship.edge.properties.type = _.get(relationship, "edge.properties.type", "DEFAULT")
-
-    relationship.edge.properties.hashId = hash(relationship.edge)
-    relationship.target.properties.hashId = hash(relationship.target)
-
-    // expects e.g. relationship = {"convert": {"relationship.edge.properties.someProp": "integer"}}
-    if(relationship.convert) {
-      for(path in relationship.convert) {
-        var value = _.get(relationship, path, null)
-        var targetType = relationship.convert[path]
-        if(targetType == "integer") {
-          _.set(relationship, path, parseInt(value))
-        } else if(targetType == "float") {
-          _.set(relationship, path, parseFloat(value))
+          var targetType = relationship.convert[path]
+          if(targetType == "integer") {
+            _.set(relationship, path, parseInt(value))
+          } else if(targetType == "float") {
+            _.set(relationship, path, parseFloat(value))
+          }
         }
+        delete relationship.convert
       }
 
-      delete relationship.convert
-    }
-  })
+      relationship.edge.properties.hashId = hash(relationship.edge)
+      relationship.target.properties.hashId = hash(relationship.target)
+    })
 
-  try {
-    // after adding cononical reversions of "repeat"-type relationships, we only really add the canonical versions
-    return updateRelationshipsCanonical(primaryId, canonicalRelationships)
-  } catch(e) {
+    var edgeLabel = relationship.edge.label
+    var nodeLabels = relationship.target.labels.join(":")
+    return updateRelationshipsCanonical(relationship.primaryId, canonicalRelationships, edgeLabel, nodeLabels)
+
+  } catch (e) {
     throw(e)
   }
 }

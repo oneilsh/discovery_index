@@ -17,6 +17,9 @@ var octokit = new Octokit({
 
 exports.updateGithub = async function(primaryId, username) {
   try {
+    // it's ok if @ is included...
+    var username = username.replace(/^@/, "")
+
     var record = await getUser(username)
 		record.repos = await getRepos(username)
     record.primaryId = primaryId
