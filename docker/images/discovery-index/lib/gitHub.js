@@ -37,11 +37,17 @@ MERGE (o:GithubProfile {username: $login,
             createdAt: $createdAt
             })
 MERGE (p:PrimaryProfile {primaryId: $primaryId})
-MERGE (u:URL {urlName: 'Blog', url: $blog})
-MERGE (o) -[:HAS_URL {source: 'github', primaryId: $primaryId}]-> (u)
 MERGE (o) -[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'github', primaryId: $primaryId}]-> (p)
-MERGE (u) -[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'github', primaryId: $primaryId}]-> (p)
 MERGE (p) -[:HAS_SECONDARY_PROFILE {source: 'github', primaryId: $primaryId}]-> (o)
+WITH o, p, $blog AS blog, $primaryId AS primaryId
+  CALL apoc.do.when(
+  blog <> 'NA',
+  "MERGE (u:URL {urlName: 'Blog', url: blog})
+  MERGE (o) -[:HAS_URL {source: 'github', primaryId: primaryId}]-> (u)
+  MERGE (u) -[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'github', primaryId: $primaryId}]-> (p)",
+  "",
+  {o: o, p: p, blog: blog, primaryId: primaryId}) YIELD value
+RETURN o
 `
 
     await runCypher(query, record)
@@ -90,13 +96,20 @@ UNWIND repos as repo
                         watchersCount: repo.watchersCount
                         })
    MERGE (u:URL {url_name: 'repo', url: repo.url})
-   MERGE (l:ProgrammingLanguage {name: repo.primaryLanguage})
    MERGE (o)-[:HAS_REPO {source: 'github', primaryId: $primaryId}]->(r)
    MERGE (r)-[:HAS_URL {source: 'github', primaryId: $primaryId}]->(u)
-   MERGE (r)-[:HAS_PROGRAMMING_LANGUAGE {role: 'primary', source: 'github', primaryId: $primaryId}]->(l)
    MERGE (r)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'github', primaryId: $primaryId}]->(p)
    MERGE (u)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'github', primaryId: $primaryId}]->(p)
-   MERGE (l)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'github', primaryId: $primaryId}]->(p)
+   WITH repo, o, p, r, u
+   CALL apoc.do.when(
+     repo.primaryLanguage <> 'NA',
+     "MERGE (l:ProgrammingLanguage {name: repo.primaryLanguage})
+     MERGE (r)-[:HAS_PROGRAMMING_LANGUAGE {role: 'primary', source: 'github', primaryId: primaryId}]->(l)
+     MERGE (l)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'github', primaryId: primaryId}]->(p)",
+     "",
+     {r: r, repo: repo, primaryId: $primaryId, p: p}
+   ) YIELD value
+   RETURN o
 `
 
     await runCypher(query, record)

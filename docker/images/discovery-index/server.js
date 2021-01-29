@@ -123,7 +123,7 @@ authRouter.post('/update_github', function(req, res) {
   if(validate_result.valid) {
     updateGithub(req.body.primaryId, req.body.username)
       .then(result => {res.status(200).json(result)})
-      .catch(result => {res.status(400).json(result)})
+      .catch(result => {console.log(result); res.status(400).json(result)})
 
   } else {
     res.status(400).json({ "jsonschemaError": validate_result })

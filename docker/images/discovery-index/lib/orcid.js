@@ -72,6 +72,7 @@ MERGE (p:PrimaryProfile {primaryId: $primaryId})
     await runCypher(query, profile)
 
     // merge in works
+    // TODO: workEntry.url should be a URL node
     var query = `
 MERGE (o:OrcidProfile {orcid: $orcid})
 MERGE (p:PrimaryProfile {primaryId: $primaryId})
