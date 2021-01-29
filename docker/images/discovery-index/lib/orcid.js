@@ -17,12 +17,12 @@ exports.updateOrcid = async function updateOrcid(primaryId, orcidId) {
 
     // create node if not exist
     var query = `
-MERGE (o:OrcidProfile {firstName: $firstName,
+MERGE (o:OrcidProfile {orcid: $orcid})
+SET o+=     {firstName: $firstName,
             lastName: $lastName,
             creditName: $creditName,
-            bio: $bio,
-            orcid: $orcid
-            })
+            bio: $bio
+            }
 MERGE (p:PrimaryProfile {primaryId: $primaryId})
 MERGE (o) -[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'orcid', primaryId: $primaryId}]-> (p)
 MERGE (p) -[:HAS_SECONDARY_PROFILE {source: 'orcid', primaryId: $primaryId}]-> (o)

@@ -28,14 +28,14 @@ exports.updateGithub = async function(primaryId, username) {
 
     // create node if not exist
     var query = `
-MERGE (o:GithubProfile {username: $login,
-            name: $name,
+MERGE (o:GithubProfile {username: $login})
+SET o +=    {name: $name,
             company: $company,
             location: $location,
             followersCount: $followersCount,
             followingCount: $followingCount,
             createdAt: $createdAt
-            })
+            }
 MERGE (p:PrimaryProfile {primaryId: $primaryId})
 MERGE (o) -[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'github', primaryId: $primaryId}]-> (p)
 MERGE (p) -[:HAS_SECONDARY_PROFILE {source: 'github', primaryId: $primaryId}]-> (o)
