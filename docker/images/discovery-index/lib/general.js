@@ -51,6 +51,7 @@ async function updateRelationshipsCanonical(primaryId, relationships, edgeLabel 
     var params = {"primaryId": primaryId, "relationships": relationships}
 
     relationships.forEach(relationship => {
+      console.log(primaryId)
       relationship.primaryId = primaryId
     })
     /*
@@ -70,7 +71,7 @@ WITH $primaryId AS primaryId, $relationships AS relationships, p as p
      SET r.source = relationship.source
      SET r.primaryId = relationship.primaryId
      `
-
+console.log(params)
     var result = await runCypher(query, params)
     return relationships
 
@@ -83,6 +84,7 @@ WITH $primaryId AS primaryId, $relationships AS relationships, p as p
 // required: primaryId, source, edge.label, target.labels
 // optional: repeat, convert, clearFirst
 exports.updateRelationshipFromApi = async function(relationship) {
+  console.log(relationship)
   try {
     if(relationship.clearFirst) {
       await deleteBySource(relationship.primaryId, relationship.source)

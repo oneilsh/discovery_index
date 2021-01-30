@@ -49,48 +49,17 @@ authRouter.use(bodyParser.json())
 app.use('/static', express.static(path.join(__dirname, 'static')))
 
 
-
-// just an async function so we can await multiple calls and concatenate the results for return
-// takes the request as given to express below
-async function updateAll(req) {
-  try {
-    if(!req.body.relationships) { req.body.relationships = [] }
-    if(!req.body.profile) {req.body.profile = {}}
-    var resultMap = {}
-    // allow adding relationship entries by prefixing top-level request body elements with relationship_ (makes ingestion from qualtrics easier)
-    for(property in req.body) {
-      if(property.startsWith("relationship_")) {
-        req.body.relationships.push(req.body[property])
-      }
-    }
-
-
-    if(req.body.deleteBySource) {
-      for(var i = 0; i < req.body.deleteBySource.length; i++) {
-        var source = req.body.deleteBySource[i]
-        await deleteBySource(req.body.primaryId, source)
-       }
-    }
-
-    resultMap.primaryResult = await updateProfile(req.body.primaryId, req.body.profile)
-    resultMap.relationships = await updateRelationships(req.body.primaryId, req.body.relationships)
-
-    if(req.body.githubId && req.body.githubId != "") {
-      resultMap.githubResult = await updateGithub(req.body.primaryId, req.body.githubId)
-    }
-    if(req.body.orcidId && req.body.orcidId != "") {
-      resultMap.ordicResult = await updateOrcid(req.body.primaryId, req.body.orcidId)
-    }
-
-    return req.body
-  } catch(e) {
-    throw e
-  }
-}
-
-
-
-
+// make sure there's an uniqueness constraing on PrimaryProfile nodes' primaryId field.
+// first arg: indices to created
+// second arg: uniqueness constraints to create (also creates an index)
+// third arg: whether to delete existing constraints first
+runCypher(`CALL apoc.schema.assert(
+  {},
+  {PrimaryProfile:['primaryId']},
+  false
+) `, {})
+  .then(res => console.log("Constraints created (if necessary) successfully."))
+  .catch(res => { console.log("Error creating constraints: "); console.log(res) })
 
 
 ///////////////////////////////////////
@@ -172,14 +141,14 @@ authRouter.post('/update_profile', function(req, res) {
 
 
 
-/*
+
 // debugs & tests
-au
-thRouter.post('/echo', function(req, res) {
+authRouter.post('/echo', function(req, res) {
   console.log(req.body)
   res.status(200).json(req.body)
 })
 
+/*
 app.get('/user/:primaryId', function(req, res) {
   var primaryId = req.params.primaryId
   getUser(primaryId)
