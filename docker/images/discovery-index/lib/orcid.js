@@ -13,7 +13,7 @@ exports.updateOrcid = async function updateOrcid(primaryId, orcidId) {
     profile.works = works
     profile.primaryId = primaryId
 
-    deleteBySource(primaryId, "orcid")
+    await deleteBySource(primaryId, "orcid")
 
     // create node if not exist
     var query = `

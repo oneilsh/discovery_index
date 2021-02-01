@@ -24,7 +24,7 @@ exports.updateGithub = async function(primaryId, username) {
 		record.repos = await getRepos(username)
     record.primaryId = primaryId
 
-    deleteBySource(primaryId, "github")
+    await deleteBySource(primaryId, "github")
 
     // create node if not exist
     var query = `
