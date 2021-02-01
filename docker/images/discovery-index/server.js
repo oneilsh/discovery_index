@@ -55,7 +55,10 @@ app.use('/static', express.static(path.join(__dirname, 'static')))
 // third arg: whether to delete existing constraints first
 runCypher(`CALL apoc.schema.assert(
   {},
-  {PrimaryProfile:['primaryId']},
+  {PrimaryProfile:['primaryId'],
+   OrcidProfile:['orcid'],
+   GitHubProfile:['username']
+ },
   false
 ) `, {})
   .then(res => console.log("Constraints created (if necessary) successfully."))

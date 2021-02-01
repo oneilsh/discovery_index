@@ -22,7 +22,7 @@ SET o+=     {firstName: $firstName,
             lastName: $lastName,
             creditName: $creditName,
             bio: $bio
-            }
+          }
 MERGE (p:PrimaryProfile {primaryId: $primaryId})
 MERGE (o) -[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'orcid', primaryId: $primaryId}]-> (p)
 MERGE (p) -[:HAS_SECONDARY_PROFILE {source: 'orcid', primaryId: $primaryId}]-> (o)
