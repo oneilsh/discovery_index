@@ -42,7 +42,7 @@ MERGE (p) -[:HAS_SECONDARY_PROFILE {source: 'github', primaryId: $primaryId}]-> 
 WITH o, p, $blog AS blog, $primaryId AS primaryId
   CALL apoc.do.when(
   blog <> 'NA',
-  "MERGE (u:URL {urlName: 'Blog', url: blog})
+  "MERGE (u:URL {title: 'Blog', url: blog})
   MERGE (o) -[:HAS_URL {source: 'github', primaryId: primaryId}]-> (u)
   MERGE (u) -[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'github', primaryId: $primaryId}]-> (p)",
   "",
@@ -95,7 +95,7 @@ UNWIND repos as repo
                         openIssuesCount: repo.openIssuesCount,
                         watchersCount: repo.watchersCount
                         })
-   MERGE (u:URL {url_name: 'repo', url: repo.url})
+   MERGE (u:URL {title: 'repo', url: repo.url})
    MERGE (o)-[:HAS_REPO {source: 'github', primaryId: $primaryId}]->(r)
    MERGE (r)-[:HAS_URL {source: 'github', primaryId: $primaryId}]->(u)
    MERGE (r)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'github', primaryId: $primaryId}]->(p)

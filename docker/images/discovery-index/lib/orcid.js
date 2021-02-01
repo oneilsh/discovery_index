@@ -37,7 +37,7 @@ MERGE (o:OrcidProfile {orcid: $orcid})
 MERGE (p:PrimaryProfile {primaryId: $primaryId})
 WITH $urls as urls, o as o, p as p
  UNWIND urls as urlEntry
-   MERGE (u:URL {urlName: urlEntry.urlName,
+   MERGE (u:URL {title: urlEntry.title,
                  url: urlEntry.url,
                  soure: 'orcid'})
    MERGE (o)-[:HAS_URL {source: 'orcid', primaryId: $primaryId}]->(u)
@@ -124,7 +124,7 @@ async function orcidPerson(orcidId, onResult, onError = console.error) {
 
     result['researcher-urls']['researcher-url'].forEach(function(entry) {
       var urlMap = {}
-      urlMap.urlName = orNa(entry, "url-name")
+      urlMap.title = orNa(entry, "url-name")
       urlMap.url = orNa(entry, "url.value")
       record.urls.push(urlMap)
     })
