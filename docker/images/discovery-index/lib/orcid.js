@@ -39,7 +39,7 @@ WITH $urls as urls, o as o, p as p
  UNWIND urls as urlEntry
    MERGE (u:URL {title: urlEntry.title,
                  url: urlEntry.url,
-                 soure: 'orcid'})
+                 source: 'orcid'})
    MERGE (o)-[:HAS_URL {source: 'orcid', primaryId: $primaryId}]->(u)
    MERGE (u)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'orcid', primaryId: $primaryId}]->(p)
 `

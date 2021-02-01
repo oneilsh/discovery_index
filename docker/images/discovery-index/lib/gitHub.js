@@ -93,18 +93,16 @@ UNWIND repos as repo
                         pushedAt: repo.pushedAt,
                         forksCount: repo.forksCount,
                         openIssuesCount: repo.openIssuesCount,
-                        watchersCount: repo.watchersCount
+                        watchersCount: repo.watchersCount,
+                        url: repo.url
                         })
-   MERGE (u:URL {title: 'repo', url: repo.url})
    MERGE (o)-[:HAS_REPO {source: 'github', primaryId: $primaryId}]->(r)
-   MERGE (r)-[:HAS_URL {source: 'github', primaryId: $primaryId}]->(u)
    MERGE (r)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'github', primaryId: $primaryId}]->(p)
-   MERGE (u)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'github', primaryId: $primaryId}]->(p)
-   WITH repo, o, p, r, u
+   WITH repo, o, p, r
    CALL apoc.do.when(
      repo.primaryLanguage <> 'NA',
      "MERGE (l:ProgrammingLanguage {name: repo.primaryLanguage})
-     MERGE (r)-[:HAS_PROGRAMMING_LANGUAGE {role: 'primary', source: 'github', primaryId: primaryId}]->(l)
+     MERGE (r)-[:HAS_PROGRAMMING_LANGUAGE {role: 'primary language', source: 'github', primaryId: primaryId}]->(l)
      MERGE (l)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'github', primaryId: primaryId}]->(p)",
      "",
      {r: r, repo: repo, primaryId: $primaryId, p: p}
