@@ -1,0 +1,226 @@
+// Main View
+match (n) -[r]-> (q) WHERE
+// but not back-pointers to primary relationships (used for efficient updates, these are deprecated though)
+((NOT exists(r.type)) OR
+(NOT r.type = "ASSOC_PRIMARY"))
+AND
+// don't show ExternalId nodes unless they are bridging nodes (have >1 in-degree or aren't ExternalId type)
+((size(() --> (q)) > 1) OR
+NOT (q:ExternalId))
+return n, r, q
+
+
+
+
+
+
+node {
+  diameter: 50px;
+  color: #A5ABB6;
+  border-color: #9AA1AC;
+  border-width: 2px;
+  text-color-internal: #FFFFFF;
+  font-size: 10px;
+}
+relationship {
+  color: #A5ABB6;
+  shaft-width: 1px;
+  font-size: 8px;
+  padding: 3px;
+  text-color-external: #000000;
+  text-color-internal: #FFFFFF;
+  caption: "<type>";
+}
+node.* {
+  color: #C990C0;
+  border-color: #b261a5;
+  text-color-internal: #FFFFFF;
+  defaultCaption: "<id>";
+}
+node.PrimaryProfile {
+  color: #4C8EDA;
+  border-color: #2870c2;
+  text-color-internal: #FFFFFF;
+  defaultCaption: "<id>";
+  caption: "{primaryId}";
+  diameter: 80px;
+}
+node.TARGET_TOPIC {
+  color: #57C7E3;
+  border-color: #23b3d7;
+  text-color-internal: #2A2C34;
+  caption: "{type}";
+}
+relationship.RELATES_TO {
+  caption: "{type}";
+}
+node.GENERIC_NODE {
+  color: #FFC454;
+  border-color: #d7a013;
+  text-color-internal: #2A2C34;
+  caption: "{type}";
+}
+node.PET {
+  color: #D9C8AE;
+  border-color: #c0a378;
+  text-color-internal: #2A2C34;
+  caption: "{name}";
+}
+node.THING {
+  color: #8DCC93;
+  border-color: #5db665;
+  text-color-internal: #2A2C34;
+  defaultCaption: "<id>";
+}
+node.ACTION {
+  color: #ECB5C9;
+  border-color: #da7298;
+  text-color-internal: #2A2C34;
+  caption: "{name}";
+}
+node.CITY {
+  color: #4C8EDA;
+  border-color: #2870c2;
+  text-color-internal: #FFFFFF;
+  caption: "{name}";
+}
+node.VEHICLE {
+  color: #FFC454;
+  border-color: #d7a013;
+  text-color-internal: #2A2C34;
+  caption: "{type}";
+}
+node.Beverage {
+  color: #DA7194;
+  border-color: #cc3c6c;
+  text-color-internal: #FFFFFF;
+  caption: "{type}";
+}
+node.TEST1 {
+  color: #569480;
+  border-color: #447666;
+  text-color-internal: #FFFFFF;
+  defaultCaption: "<id>";
+  caption: "{val2}";
+}
+node.TEST2 {
+  defaultCaption: "<id>";
+}
+node.GithubProfile {
+  caption: "{username}";
+  color: #57C7E3;
+  border-color: #23b3d7;
+  text-color-internal: #2A2C34;
+}
+node.GithubRepo {
+  caption: "{name}";
+  color: #ECB5C9;
+  border-color: #da7298;
+  text-color-internal: #2A2C34;
+  diameter: 50px;
+}
+node.URL {
+  caption: "{title}";
+  color: #8DCC93;
+  border-color: #5db665;
+  text-color-internal: #2A2C34;
+  diameter: 50px;
+}
+node.ProgrammingLanguage {
+  caption: "{name}";
+  color: #D9C8AE;
+  border-color: #c0a378;
+  text-color-internal: #2A2C34;
+}
+node.OrcidProfile {
+  caption: "{firstName}";
+  color: #C990C0;
+  border-color: #b261a5;
+  text-color-internal: #FFFFFF;
+}
+node.Keyword {
+  caption: "{keyword}";
+  color: #FFC454;
+  border-color: #d7a013;
+  text-color-internal: #2A2C34;
+  diameter: 50px;
+}
+node.ExternalId {
+  caption: "{id}";
+  color: #4C8EDA;
+  border-color: #2870c2;
+  text-color-internal: #FFFFFF;
+  diameter: 20px;
+}
+node.Work {
+  caption: "{title}";
+  color: #ECB5C9;
+  border-color: #da7298;
+  text-color-internal: #2A2C34;
+  diameter: 50px;
+}
+node.Email {
+  caption: "{email}";
+  color: #57C7E3;
+  border-color: #23b3d7;
+  text-color-internal: #2A2C34;
+  diameter: 50px;
+}
+node.CORE_FACILITY {
+  caption: "{name}";
+}
+relationship.HAS_SECONDARY_PROFILE {
+  color: #D9C8AE;
+  border-color: #c0a378;
+  text-color-internal: #2A2C34;
+  shaft-width: 1px;
+  caption: "<type>";
+}
+node.Person {
+  caption: "{name}";
+}
+node.CoreFacility {
+  caption: "{name}";
+  color: #F16667;
+  border-color: #eb2728;
+  text-color-internal: #FFFFFF;
+  diameter: 65px;
+}
+relationship.LIKELY_TO_USE {
+  caption: "{likeliness}";
+}
+relationship.HAS_URL {
+  caption: "<type>";
+}
+relationship.HAS_PROGRAMMING_LANGUAGE {
+  caption: "{role}";
+}
+relationship.HAS_EXTERNAL_ID {
+  caption: "<type>";
+}
+relationship.FOLLOWS {
+  shaft-width: 1px;
+}
+node.Topic {
+  defaultCaption: "<id>";
+  color: #FFC454;
+  border-color: #d7a013;
+  text-color-internal: #2A2C34;
+}
+relationship.NEEDS_EXPERTISE {
+  color: #F79767;
+  border-color: #f36924;
+  text-color-internal: #FFFFFF;
+  shaft-width: 3px;
+  caption: "<type>";
+}
+relationship.HAS_EXPERTISE {
+  color: #4C8EDA;
+  border-color: #2870c2;
+  text-color-internal: #FFFFFF;
+  shaft-width: 3px;
+}
+relationship.USES {
+  caption: "<type>";
+  shaft-width: 1px;
+}
