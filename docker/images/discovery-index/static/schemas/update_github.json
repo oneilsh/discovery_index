@@ -1,41 +1,25 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema",
-    "default": {},
-    "description": "The root schema comprises the entire JSON document.",
-    "examples": [
-        {
-            "primaryId": "shawn",
-            "username": "oneilsh"
-        }
-    ],
-    "required": [
-        "primaryId",
-        "username"
-    ],
-    "title": "The root schema",
-    "type": "object",
-    "properties": {
-        "primaryId": {
-            "$id": "#/properties/primaryId",
-            "default": "",
-            "description": "The primary Discovery Index ID associated with the user (unique static identifier, e.g. ORCiD, SSN, etc).",
-            "examples": [
-                "user@primary.email.com",
-                "0185130498"
-            ],
-            "title": "The primaryId schema",
-            "type": "string"
-        },
-        "username": {
-            "$id": "#/properties/username",
-            "default": "",
-            "description": "User's github handle. May include @ prefix or not.",
-            "examples": [
-                "oneilsh",
-                "@oneilsh"
-            ],
-            "title": "The github username schema",
-            "type": "string"
-        }
+  "type": "object",
+  "properties": {
+    "primaryId": {
+      "type": "string",
+      "examples": [
+        "oneils@oregonstate.edu",
+        "12-12124-142"
+      ],
+      "description": "Primary, stable identifier representing an individual application-wide."
+    },
+    "username": {
+      "type": "string",
+      "description": "Github username, may include prefixing @.",
+      "examples": [
+        "@oneilsh",
+        "oneilsh"
+      ]
     }
+  },
+  "required": [
+    "primaryId",
+    "username"
+  ]
 }

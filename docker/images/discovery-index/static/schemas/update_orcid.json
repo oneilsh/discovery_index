@@ -1,1 +1,27 @@
-{}
+{
+  "type": "object",
+  "properties": {
+    "primaryId": {
+      "type": "string",
+      "examples": [
+        "oneils@oregonstate.edu",
+        "12-12124-142"
+      ],
+      "description": "Primary, stable identifier representing an individual application-wide."
+    },
+    "orcidId": {
+      "type": "string",
+      "description": "ORCiD ID, may be part of a URL containing orcid.org",
+      "examples": [
+        "0000-0001-6220-7080",
+        "https://orcid.org/0000-0001-6220-7080",
+        "https://orcid.org/0000-0001-6220-7080/"
+      ],
+      "pattern": "^(.*?orcid.org/)?(\\d{4,4}-\\d{4,4}-\\d{4,4}-\\d{4,4})(/?)$"
+    }
+  },
+  "required": [
+    "primaryId",
+    "orcidId"
+  ]
+}

@@ -1,1 +1,24 @@
-{}
+{
+  "type": "object",
+  "properties": {
+    "primaryId": {
+      "type": "string",
+      "examples": [
+        "oneils@oregonstate.edu",
+        "12-12124-142"
+      ],
+      "description": "Primary, stable identifier representing an individual application-wide."
+    },
+    "profile": {
+      "type": "object",
+      "description": "Key/value set to use for the PrimaryProfile node's properties.",
+      "patternProperties": {
+        ".*": {"type": ["string", "number"]}
+      }
+    }
+  },
+  "required": [
+    "primaryId",
+    "profile"
+  ]
+}

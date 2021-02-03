@@ -18,6 +18,8 @@ var { updateOrcid } = require('./lib/orcid.js')
 var { updateProfile, updateRelationships, deleteBySource, updateRelationshipFromApi } = require('./lib/general.js')
 var { orNa, getUser } = require('./lib/utils.js')
 
+// TODO: drop usage of backpointers in favor of explicit searching for nodes without paths to
+// PrimaryProfile nodes via technique at https://stackoverflow.com/questions/27778120/neo4j-cypher-search-for-nodes-with-no-path-between-them
 
 
 var api_insecure = process.env.API_INSECURE || "false"
@@ -79,6 +81,7 @@ authRouter.post('/update_relationship', function(req, res) {
       .catch(result => { res.status(400).json(result) })
 
   } else {
+    console.log({ "jsonschemaError": validate_result })
     res.status(400).json({ "jsonschemaError": validate_result })
   }
 
