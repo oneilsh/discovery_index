@@ -2,6 +2,7 @@ version: "3.7"
 
 volumes:
   neo4jstorage:
+  rstudioStorage:
 
 services:
   api:
@@ -47,3 +48,12 @@ services:
       - type: bind
         target: /var/lib/neo4j/certificates/certs
         source: ./images/discovery-index/git-crypt/certs
+
+  rstudio:
+    image: rocker/rstudio:3.6.2
+    expose: # these ports are only exposed to the docker service network (using non-ssl interface for internal traffic)
+      - "8787"
+    environment:
+      PASSWORD: dumbpassword
+    volumes:
+      - rstudioStorage:/data/rstudio

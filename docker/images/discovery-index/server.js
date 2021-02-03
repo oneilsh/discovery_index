@@ -18,6 +18,22 @@ var { updateOrcid } = require('./lib/orcid.js')
 var { updateProfile, updateRelationships, deleteBySource, updateRelationshipFromApi } = require('./lib/general.js')
 var { orNa, getUser } = require('./lib/utils.js')
 
+var { createProxyMiddleware } = require('http-proxy-middleware')
+
+// proxy middleware options
+const options = {
+  target: 'http://rstudio:8787', // target host
+  changeOrigin: true, // needed for virtual hosted sites
+  autoRewrite: true,
+  ws: true, // proxy websockets
+  pathRewrite: {
+    '^/rstudio/': '', // remove base path
+  }
+}
+
+app.use('/rstudio', createProxyMiddleware(options))
+
+
 // TODO: drop usage of backpointers in favor of explicit searching for nodes without paths to
 // PrimaryProfile nodes via technique at https://stackoverflow.com/questions/27778120/neo4j-cypher-search-for-nodes-with-no-path-between-them
 
