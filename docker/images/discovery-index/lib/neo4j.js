@@ -9,7 +9,6 @@ exports.runCypher = async function runCypher(query, params, endpoint = process.e
   var head = {"Authorization" : "Basic " + userPass,
               "Content-Type": "application/json",
               "Accept": "application/json"}
-
   try {
     var result = axios.post(endpoint, payload, {headers: head})
     return result
