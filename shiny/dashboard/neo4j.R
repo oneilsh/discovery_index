@@ -1,26 +1,19 @@
 library(neo4r)
 library(dplyr)
-library(igraph)
-library(networkD3)
 
 
 con <- neo4j_api$new(
-  url = "https://tehr-discovery-index-dev.cgrb.oregonstate.edu:7473", 
-  user = "neo4j", 
-  password = pass
+  url = Sys.getenv("NEO_URL", "https://tehr-discovery-index-dev.cgrb.oregonstate.edu:7473"),
+  user = Sys.getenv("NEO_USER", "neo4j"),
+  password = Sys.getenv("NEO_PASS", "neo4j")
 )
 
-G <-"MATCH a=(p)-[r]->(m) RETURN a;" %>% 
-  call_neo4j(con, type = "graph") 
-
-G <- "
-match (n) -[r]-> (q) WHERE
-((NOT exists(r.type)) OR
-(NOT r.type = 'ASSOC_PRIMARY'))
-AND
-((size(() --> (q)) > 1) OR
-NOT (q:ExternalId))
-return n, r, q" %>% call_neo4j(con, type = "graph") 
+run_query <- function(query_str) {
+  G <- query_str %>%
+    call_neo4j(con, type = "graph") %>%
+    neo_to_propgraph()
+  return(G)
+}
 
 neo_to_propgraph <- function(G) {
   neoRels <- G$relationships
@@ -46,14 +39,15 @@ neo_to_propgraph <- function(G) {
   return(list(nodes = inodes, edges = irels))
 }
 
-ig <- neo_to_propgraph(G)
 
-nodes <- ig$nodes
-edges <- ig$edges
+if(FALSE) {
+  ig <- neo_to_propgraph(G)
+  
+  nodes <- ig$nodes
+  edges <- ig$edges
 
-#nodes$label <- nodes$firstLabel
 nodes <- nodes %>%
-  mutate(title = case_when(firstLabel == "GithubRepo" ~ name,
+mutate(title = case_when(firstLabel == "GithubRepo" ~ name,
                            firstLabel == "Work" ~ title,
                            TRUE ~ ""))
 nodes$group <- nodes$firstLabel
@@ -64,3 +58,4 @@ visNetwork(nodes, edges) %>%
 
 
 forceNetwork(Links = edges, Nodes = nodes, Source = "from", Target = "to", NodeID = "nodeId", Group = "nodeFirstLabels")
+}

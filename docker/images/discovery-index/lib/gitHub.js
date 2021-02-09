@@ -15,7 +15,7 @@ var octokit = new Octokit({
   auth: process.env.GITHUB_ACCESS_TOKEN
 })
 
-exports.updateGithub = async function(primaryId, username) {
+exports.updateGithub = async function(primaryId, username, diProject = "default") {
   try {
     // it's ok if @ is included...
     var username = username.replace(/^@/, "")
@@ -23,8 +23,11 @@ exports.updateGithub = async function(primaryId, username) {
     var record = await getUser(username)
 		record.repos = await getRepos(username)
     record.primaryId = primaryId
+    record.diProject = diProject
 
-    await deleteBySource(primaryId, "github")
+    // TODO: API-defined relationships allow setting clearFirst = false, but no such option here for GitHub or ORCID info - this always clears
+    // probably should align these
+    await deleteBySource(primaryId, "github", diProject)
 
     // create node if not exist
     var query = `
@@ -34,44 +37,45 @@ SET o +=    {name: $name,
             location: $location,
             followersCount: $followersCount,
             followingCount: $followingCount,
-            createdAt: $createdAt
+            createdAt: $createdAt,
+            diProject: $diProject
             }
-MERGE (p:PrimaryProfile {primaryId: $primaryId})
-MERGE (o) -[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'github', primaryId: $primaryId}]-> (p)
-MERGE (p) -[:HAS_SECONDARY_PROFILE {source: 'github', primaryId: $primaryId}]-> (o)
-WITH o, p, $blog AS blog, $primaryId AS primaryId
+MERGE (p:PrimaryProfile {primaryId: $primaryId, diProject: $diProject})
+MERGE (o) -[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'github', primaryId: $primaryId, diProject: $diProject}]-> (p)
+MERGE (p) -[:HAS_SECONDARY_PROFILE {source: 'github', primaryId: $primaryId, diProject: $diProject}]-> (o)
+WITH o, p, $blog AS blog, $primaryId AS primaryId, $diProject as diProject
   CALL apoc.do.when(
   blog <> 'NA',
-  "MERGE (u:URL {title: 'Blog', url: blog})
-  MERGE (o) -[:HAS_URL {source: 'github', primaryId: primaryId}]-> (u)
-  MERGE (u) -[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'github', primaryId: $primaryId}]-> (p)",
+  "MERGE (u:URL {title: 'Blog', url: blog, diProject: diProject})
+  MERGE (o) -[:HAS_URL {source: 'github', primaryId: primaryId, diProject: diProject}]-> (u)
+  MERGE (u) -[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'github', primaryId: $primaryId, diProject: diProject}]-> (p)",
   "",
-  {o: o, p: p, blog: blog, primaryId: primaryId}) YIELD value
+  {o: o, p: p, blog: blog, primaryId: primaryId, diProject: diProject}) YIELD value
 RETURN o
 `
 
     await runCypher(query, record)
 
     var query = `
-MERGE (o:GithubProfile {username: $login})
-MERGE (p:PrimaryProfile {primaryId: $primaryId})
+MERGE (o:GithubProfile {username: $login, diProject: $diProject})
+MERGE (p:PrimaryProfile {primaryId: $primaryId, diProject: $diProject})
 WITH $followers as followers, o as o, p as p
  UNWIND followers as follower
-   MERGE (f:GithubProfile {username: follower})
-   MERGE (f)-[:FOLLOWS {source: 'github', primaryId: $primaryId}]->(o)
-   MERGE (f)-[:ASSOC_PRIMARY{type: 'ASSOC_PRIMARY', source: 'github', primaryId: $primaryId}]->(p)
+   MERGE (f:GithubProfile {username: follower, diProject: $diProject})
+   MERGE (f)-[:FOLLOWS {source: 'github', primaryId: $primaryId, diProject: $diProject}]->(o)
+   MERGE (f)-[:ASSOC_PRIMARY{type: 'ASSOC_PRIMARY', source: 'github', primaryId: $primaryId, diProject: $diProject}]->(p)
 `
 
     await runCypher(query, record)
 
     var query = `
-MERGE (o:GithubProfile {username: $login})
-MERGE (p:PrimaryProfile {primaryId: $primaryId})
+MERGE (o:GithubProfile {username: $login, diProject: $diProject})
+MERGE (p:PrimaryProfile {primaryId: $primaryId, diProject: $diProject})
 WITH $following as following, o as o, p as p
  UNWIND following as followed
-   MERGE (f:GithubProfile {username: followed})
-   MERGE (o)-[:FOLLOWS {source: 'github', primaryId: $primaryId}]->(f)
-   MERGE (f)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'github', primaryId: $primaryId}]->(p)
+   MERGE (f:GithubProfile {username: followed, diProject: $diProject})
+   MERGE (o)-[:FOLLOWS {source: 'github', primaryId: $primaryId, diProject: $diProject}]->(f)
+   MERGE (f)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'github', primaryId: $primaryId, diProject: $diProject}]->(p)
 `
 
     await runCypher(query, record)
@@ -82,8 +86,8 @@ WITH $following as following, o as o, p as p
     // (or other expected-to-be-shared nodes, it's mostly noise)
 
     var query = `
-MERGE (o:GithubProfile {username: $login})
-MERGE (p:PrimaryProfile {primaryId: $primaryId})
+MERGE (o:GithubProfile {username: $login, diProject: $diProject})
+MERGE (p:PrimaryProfile {primaryId: $primaryId, diProject: $diProject})
 WITH $repos as repos, o as o, p as p
 UNWIND repos as repo
    MERGE (r:GithubRepo {name: repo.name,
@@ -94,18 +98,19 @@ UNWIND repos as repo
                         forksCount: repo.forksCount,
                         openIssuesCount: repo.openIssuesCount,
                         watchersCount: repo.watchersCount,
-                        url: repo.url
+                        url: repo.url,
+                        diProject: $diProject
                         })
-   MERGE (o)-[:HAS_REPO {source: 'github', primaryId: $primaryId}]->(r)
-   MERGE (r)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'github', primaryId: $primaryId}]->(p)
+   MERGE (o)-[:HAS_REPO {source: 'github', primaryId: $primaryId, diProject: $diProject}]->(r)
+   MERGE (r)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'github', primaryId: $primaryId, diProject: $diProject}]->(p)
    WITH repo, o, p, r
    CALL apoc.do.when(
      repo.primaryLanguage <> 'NA',
-     "MERGE (l:ProgrammingLanguage {name: repo.primaryLanguage})
-     MERGE (r)-[:HAS_PROGRAMMING_LANGUAGE {role: 'primary language', source: 'github', primaryId: primaryId}]->(l)
-     MERGE (l)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'github', primaryId: primaryId}]->(p)",
+     "MERGE (l:ProgrammingLanguage {name: repo.primaryLanguage, diProject: diProject})
+     MERGE (r)-[:HAS_PROGRAMMING_LANGUAGE {role: 'primary language', source: 'github', primaryId: primaryId, diProject: diProject}]->(l)
+     MERGE (l)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'github', primaryId: primaryId, diProject: diProject}]->(p)",
      "",
-     {r: r, repo: repo, primaryId: $primaryId, p: p}
+     {r: r, repo: repo, primaryId: $primaryId, p: p, diProject: $diProject}
    ) YIELD value
    RETURN o
 `

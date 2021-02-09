@@ -8,6 +8,7 @@ exports.updateProfile = async function(primaryId, profile) {
     // SET overwrites every field in the created/matched node, including primaryId, so it needs to be part of the profile itself
     // (even though the signature of this function is desiged to make primaryId a seperate parameter)
 
+    profile.diProject = profile.diProject || "default"
     profile.primaryId = primaryId
     var params = {"primaryId": primaryId, "profile": profile}
     var query = `
@@ -23,17 +24,17 @@ RETURN p
   }
 }
 
-deleteBySource = exports.deleteBySource = async function(primaryId, source) {
+deleteBySource = exports.deleteBySource = async function(primaryId, source, diProject = "default") {
   try {
-    var params = {"primaryId": primaryId, "source": source}
+    var params = {"primaryId": primaryId, "source": source, "diProject": diProject}
 
     // delete all relationships with the given source and primaryId
     // then find all nodes without an ASSOC_PRIMARY relationship to a primary profile and delete them
     var query = `
-MATCH (s) -[r {source: $source, primaryId: $primaryId}]-> (t)
+MATCH (s) -[r {source: $source, primaryId: $primaryId, diProject: $diProject}]-> (t)
 DELETE r
 WITH r as r
-  MATCH (n) WHERE
+  MATCH (n {diProject: $diProject}) WHERE
   NOT (n) -[:ASSOC_PRIMARY]-> (:PrimaryProfile) AND
   NOT (n:PrimaryProfile)
   DETACH DELETE n
@@ -46,30 +47,28 @@ WITH r as r
   }
 }
 
-async function updateRelationshipsCanonical(primaryId, relationships, edgeLabel = "GENERIC_RELATIONSHIP", nodeLabels = "GENERIC_NODE") {
+async function updateRelationshipsCanonical(primaryId, relationships, edgeLabel = "GENERIC_RELATIONSHIP", nodeLabels = "GENERIC_NODE", diProject = "default") {
   try {
-    var params = {"primaryId": primaryId, "relationships": relationships}
+    var params = {"primaryId": primaryId, "relationships": relationships, "diProject": diProject}
 
-    relationships.forEach(relationship => {
-      console.log(primaryId)
-      relationship.primaryId = primaryId
-    })
     /*
     The hashId and this merge, set, merge, set strategy allow for filling properties from an object (w/ set) but
     creating a new relationship or node where needed by merging on the hashId which summarizes all of the object info
     */
     var query = `
-MERGE (p:PrimaryProfile {primaryId: $primaryId})
-WITH $primaryId AS primaryId, $relationships AS relationships, p as p
+MERGE (p:PrimaryProfile {primaryId: $primaryId, diProject: $diProject})
+WITH $primaryId AS primaryId, $relationships AS relationships, p as p, $diProject as diProject
  UNWIND relationships AS relationship
    MERGE (t:${nodeLabels} {hashId: relationship.target.properties.hashId})
    SET t = relationship.target.properties
-   WITH relationship as relationship, p as p, t as t
+   SET t.diProject = diProject
+   WITH relationship, p, t, primaryId, diProject
      MERGE (p) -[r:${edgeLabel} {hashId: relationship.edge.properties.hashId}]-> (t)
-     MERGE (t) -[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: relationship.source, primaryId: relationship.primaryId}]-> (p)
+     MERGE (t) -[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: relationship.source, primaryId: primaryId, diProject: diProject}]-> (p)
      SET r = relationship.edge.properties
      SET r.source = relationship.source
-     SET r.primaryId = relationship.primaryId
+     SET r.primaryId = primaryId
+     SET r.diProject = diProject
      `
 console.log(params)
     var result = await runCypher(query, params)
@@ -82,12 +81,13 @@ console.log(params)
 
 // should get JSON body matching update_relationship schema
 // required: primaryId, source, edge.label, target.labels
-// optional: repeat, convert, clearFirst
+// optional: repeat, convert, clearFirst, diProject
 exports.updateRelationshipFromApi = async function(relationship) {
-  console.log(relationship)
   try {
+    relationship.diProject = _.get(relationship, "diProject", "default")
+
     if(relationship.clearFirst) {
-      await deleteBySource(relationship.primaryId, relationship.source)
+      await deleteBySource(relationship.primaryId, relationship.source, relationship.diProject)
     }
 
     // make sure properties exists at least even if empty
@@ -139,7 +139,7 @@ exports.updateRelationshipFromApi = async function(relationship) {
 
     var edgeLabel = relationship.edge.label
     var nodeLabels = relationship.target.labels.join(":")
-    return updateRelationshipsCanonical(relationship.primaryId, canonicalRelationships, edgeLabel, nodeLabels)
+    return updateRelationshipsCanonical(relationship.primaryId, canonicalRelationships, edgeLabel, nodeLabels, relationship.diProject)
 
   } catch (e) {
     throw(e)

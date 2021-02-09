@@ -3,7 +3,7 @@ var { doGet, orNa } = require('./utils.js')
 var { deleteBySource } = require('./general.js')
 
 
-exports.updateOrcid = async function updateOrcid(primaryId, orcidId) {
+exports.updateOrcid = async function updateOrcid(primaryId, orcidId, diProject = "default") {
   try {
     // allow e.g. https://orcid.org/0000-0001-6220-7080/ (leading orcid.org/ and/or trailing /)
     var orcidId = orcidId.replace(/^.*?orcid.org\//,"").replace(/\/$/,"")
@@ -12,8 +12,9 @@ exports.updateOrcid = async function updateOrcid(primaryId, orcidId) {
     var works = await orcidWorks(orcidId)
     profile.works = works
     profile.primaryId = primaryId
+    profile.diProject = diProject
 
-    await deleteBySource(primaryId, "orcid")
+    await deleteBySource(primaryId, "orcid", diProject)
 
     // create node if not exist
     var query = `
@@ -21,11 +22,12 @@ MERGE (o:OrcidProfile {orcid: $orcid})
 SET o+=     {firstName: $firstName,
             lastName: $lastName,
             creditName: $creditName,
-            bio: $bio
+            bio: $bio,
+            diProject: $diProject
           }
-MERGE (p:PrimaryProfile {primaryId: $primaryId})
-MERGE (o) -[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'orcid', primaryId: $primaryId}]-> (p)
-MERGE (p) -[:HAS_SECONDARY_PROFILE {source: 'orcid', primaryId: $primaryId}]-> (o)
+MERGE (p:PrimaryProfile {primaryId: $primaryId, diProject: $diProject})
+MERGE (o) -[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'orcid', primaryId: $primaryId, diProject: $diProject}]-> (p)
+MERGE (p) -[:HAS_SECONDARY_PROFILE {source: 'orcid', primaryId: $primaryId, diProject: $diProject}]-> (o)
 `
 
     await runCypher(query, profile)
@@ -33,40 +35,41 @@ MERGE (p) -[:HAS_SECONDARY_PROFILE {source: 'orcid', primaryId: $primaryId}]-> (
 
     // merge in urls
     var query = `
-MERGE (o:OrcidProfile {orcid: $orcid})
-MERGE (p:PrimaryProfile {primaryId: $primaryId})
+MERGE (o:OrcidProfile {orcid: $orcid, diProject: $diProject})
+MERGE (p:PrimaryProfile {primaryId: $primaryId, diProject: $diProject})
 WITH $urls as urls, o as o, p as p
  UNWIND urls as urlEntry
    MERGE (u:URL {title: urlEntry.title,
                  url: urlEntry.url,
-                 source: 'orcid'})
-   MERGE (o)-[:HAS_URL {source: 'orcid', primaryId: $primaryId}]->(u)
-   MERGE (u)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'orcid', primaryId: $primaryId}]->(p)
+                 source: 'orcid',
+                 diProject: $diProject})
+   MERGE (o)-[:HAS_URL {source: 'orcid', primaryId: $primaryId, diProject: $diProject}]->(u)
+   MERGE (u)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'orcid', primaryId: $primaryId, diProject: $diProject}]->(p)
 `
     await runCypher(query, profile)
 
     // merge in emails
     var query = `
-MERGE (o:OrcidProfile {orcid: $orcid})
-MERGE (p:PrimaryProfile {primaryId: $primaryId})
+MERGE (o:OrcidProfile {orcid: $orcid, diProject: $diProject})
+MERGE (p:PrimaryProfile {primaryId: $primaryId, diProject: $diProject})
 WITH $emails as emails, o as o, p as p
  UNWIND emails as emailEntry
-   MERGE (e:Email {email: emailEntry})
-   MERGE (o)-[:HAS_EMAIL {source: 'orcid', primaryId: $primaryId}]->(e)
-   MERGE (e)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'orcid', primaryId: $primaryId}]->(p)
+   MERGE (e:Email {email: emailEntry, diProject: $diProject})
+   MERGE (o)-[:HAS_EMAIL {source: 'orcid', primaryId: $primaryId, diProject: $diProject}]->(e)
+   MERGE (e)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'orcid', primaryId: $primaryId, diProject: $diProject}]->(p)
 `
 
     await runCypher(query, profile)
 
     // merge in keywords
     var query = `
-MERGE (o:OrcidProfile {orcid: $orcid})
-MERGE (p:PrimaryProfile {primaryId: $primaryId})
+MERGE (o:OrcidProfile {orcid: $orcid, diProject: $diProject})
+MERGE (p:PrimaryProfile {primaryId: $primaryId, diProject: $diProject})
  WITH $keywords as keywords, o as o, p as p
  UNWIND keywords as keywordEntry
-   MERGE (k:Keyword {keyword: keywordEntry})
-   MERGE (o)-[:HAS_KEYWORD {source: 'orcid', primaryId: $primaryId}]->(k)
-   MERGE (k)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'orcid', primaryId: $primaryId}]->(p)
+   MERGE (k:Keyword {keyword: keywordEntry, diProject: $diProject})
+   MERGE (o)-[:HAS_KEYWORD {source: 'orcid', primaryId: $primaryId, diProject: $diProject}]->(k)
+   MERGE (k)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'orcid', primaryId: $primaryId, diProject: $diProject}]->(p)
 `
 
     await runCypher(query, profile)
@@ -74,8 +77,8 @@ MERGE (p:PrimaryProfile {primaryId: $primaryId})
     // merge in works
     // TODO: workEntry.url should be a URL node
     var query = `
-MERGE (o:OrcidProfile {orcid: $orcid})
-MERGE (p:PrimaryProfile {primaryId: $primaryId})
+MERGE (o:OrcidProfile {orcid: $orcid, diProject: $diProject})
+MERGE (p:PrimaryProfile {primaryId: $primaryId, diProject: $diProject})
 WITH $works as works, o as o, p as p
  UNWIND works as workEntry
    MERGE (w:Work {title: workEntry.title,
@@ -84,17 +87,19 @@ WITH $works as works, o as o, p as p
                   type: workEntry.type,
                   year: workEntry.pubYear,
                   month: workEntry.pubMonth,
-                  day: workEntry.pubDay
+                  day: workEntry.pubDay,
+                  diProject: $diProject
           })
-   MERGE (o)-[:HAS_WORK {source: 'orcid', primaryId: $primaryId}]->(w)
-   MERGE (w)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'orcid', primaryId: $primaryId}]->(p)
+   MERGE (o)-[:HAS_WORK {source: 'orcid', primaryId: $primaryId, diProject: $diProject}]->(w)
+   MERGE (w)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'orcid', primaryId: $primaryId, diProject: $diProject}]->(p)
    WITH workEntry as workEntry, o as o, w as w, p as p
      UNWIND workEntry.externalIds as externalId
        MERGE (eid:ExternalId {type: externalId.type,
-                              id: externalId.id
+                              id: externalId.id,
+                              diProject: $diProject
                               })
-       MERGE (w)-[:HAS_EXTERNAL_ID {source: 'orcid', primaryId: $primaryId}]->(eid)
-       MERGE (eid)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'orcid', primaryId: $primaryId}]->(p)
+       MERGE (w)-[:HAS_EXTERNAL_ID {source: 'orcid', primaryId: $primaryId, diProject: $diProject}]->(eid)
+       MERGE (eid)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'orcid', primaryId: $primaryId, diProject: $diProject}]->(p)
 `
 
     await runCypher(query, profile)

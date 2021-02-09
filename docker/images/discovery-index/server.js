@@ -104,7 +104,7 @@ app.post('/safe_cypher', async function(req, res) {
         var result = await runCypher(query, params)
         res.status(200).json(result.data)
       } catch(e) {
-        res.status(400).json("cypher execute error": e)
+        res.status(400).json({"cypher execute error": e})
       }
       //runCypher(query, params)
       //  .then(result => { res.status(200).json(result) })
