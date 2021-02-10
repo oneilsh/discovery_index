@@ -124,7 +124,7 @@ var update_relationship_schema = JSON.parse(fs.readFileSync('./static/schemas/up
 authRouter.post('/update_relationship', function(req, res) {
   var validate_result = validate(req.body, update_relationship_schema)
   if(validate_result.valid) {
-    updateRelationshipFromApi(req.body)
+    updateRelationshipFromApi(req.body) // inconsistent w/ others
       .then(result => { res.status(200).json(result) })
       .catch(result => { res.status(400).json(result) })
 
@@ -143,7 +143,7 @@ var update_github_schema = JSON.parse(fs.readFileSync('./static/schemas/update_g
 authRouter.post('/update_github', function(req, res) {
   var validate_result = validate(req.body, update_github_schema)
   if(validate_result.valid) {
-    updateGithub(req.body.primaryId, req.body.username)
+    updateGithub(req.body.primaryId, req.body.username, _.get(req, "body.diProject", "default"))
       .then(result => {res.status(200).json(result)})
       .catch(result => {console.log(result); res.status(400).json(result)})
 
@@ -162,7 +162,7 @@ var update_orcid_schema = JSON.parse(fs.readFileSync('./static/schemas/update_or
 authRouter.post('/update_orcid', function(req, res) {
   var validate_result = validate(req.body, update_orcid_schema)
   if(validate_result.valid) {
-    updateOrcid(req.body.primaryId, req.body.orcidId)
+    updateOrcid(req.body.primaryId, req.body.orcidId, _.get(req, "body.diProject", "default"))
       .then(result => {res.status(200).json(result)})
       .catch(result => {res.status(400).json(result)})
 
@@ -181,6 +181,9 @@ var update_profile_schema = JSON.parse(fs.readFileSync('./static/schemas/update_
 authRouter.post('/update_profile', function(req, res) {
   var validate_result = validate(req.body, update_profile_schema)
   if(validate_result.valid) {
+    // this is confusing: the api is {primaryId: "somebody", diProject: "myProject", profile: {"Name": "Joe Schmoe", Age: 39}}
+    // but we put the diProject into the profile since in the call SET is used to set all properties at once from the profile
+    req.body.profile.diProject = _.get(req, "body.diProject", "default")
     updateProfile(req.body.primaryId, req.body.profile)
       .then(result => {res.status(200).json(result)})
       .catch(result => {res.status(400).json(result)})
