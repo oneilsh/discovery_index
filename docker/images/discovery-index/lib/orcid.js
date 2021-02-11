@@ -93,10 +93,7 @@ WITH $works as works, o as o, p as p
           })
    MERGE (o)-[:HAS_WORK {source: 'orcid', primaryId: $primaryId, diProject: $diProject}]->(w)
    MERGE (w)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'orcid', primaryId: $primaryId, diProject: $diProject}]->(p)
-   MERGE (j:Journal {title: workEntry.journalTitle, diProject: $diProject})
-   MERGE (j)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'orcid', primaryId: $primaryId, diProject: $diProject}]->(p)
-   MERGE (w)-[:IN_JOURNAL {diProject: $diProject}]->(j)
-   WITH workEntry as workEntry, o as o, w as w, p as p
+   WITH workEntry, o, w, p
      UNWIND workEntry.externalIds as externalId
        MERGE (eid:ExternalId {type: externalId.type,
                               id: externalId.id,
@@ -105,6 +102,8 @@ WITH $works as works, o as o, p as p
        MERGE (w)-[:HAS_EXTERNAL_ID {source: 'orcid', primaryId: $primaryId, diProject: $diProject}]->(eid)
        MERGE (eid)-[:ASSOC_PRIMARY {type: 'ASSOC_PRIMARY', source: 'orcid', primaryId: $primaryId, diProject: $diProject}]->(p)
 `
+
+
 
     await runCypher(query, profile)
 
