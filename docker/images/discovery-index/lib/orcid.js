@@ -184,7 +184,8 @@ async function orcidWorks(orcidId) {
 
       workMap.title = orNa(mainSummary, "title.title.value")
       // TODO: subtitle?
-      workMap.journalTitle = _.get(mainSummary, 'journal-title.value', null)
+      //workMap.journalTitle = _.get(mainSummary, 'journal-title.value', null)
+      workMap.journalTitle = orNa(mainSummary, 'journal-title.value')
       workMap.type = orNa(mainSummary, 'type')
       workMap.url = orNa(mainSummary, 'url.value')
 
