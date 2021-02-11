@@ -70,7 +70,7 @@ WITH $primaryId AS primaryId, $relationships AS relationships, p as p, $diProjec
      SET r.primaryId = primaryId
      SET r.diProject = diProject
      `
-console.log(params)
+
     var result = await runCypher(query, params)
     return relationships
 

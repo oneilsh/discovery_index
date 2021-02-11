@@ -1,6 +1,7 @@
 var { runCypher } = require('./neo4j.js')
 var { doGet, orNa } = require('./utils.js')
 var { deleteBySource } = require('./general.js')
+var _ = require('lodash')
 
 
 exports.updateOrcid = async function updateOrcid(primaryId, orcidId, diProject = "default") {
@@ -184,7 +185,7 @@ async function orcidWorks(orcidId) {
 
       workMap.title = orNa(mainSummary, "title.title.value")
       // TODO: subtitle?
-      workMap.journalTitle = orNa(mainSummary, 'journal-title.value')
+      workMap.journalTitle = _.get(mainSummary, 'journal-title.value', null)
       workMap.type = orNa(mainSummary, 'type')
       workMap.url = orNa(mainSummary, 'url.value')
 

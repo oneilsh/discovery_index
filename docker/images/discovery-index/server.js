@@ -161,12 +161,15 @@ var update_orcid_schema = JSON.parse(fs.readFileSync('./static/schemas/update_or
 
 authRouter.post('/update_orcid', function(req, res) {
   var validate_result = validate(req.body, update_orcid_schema)
+  console.log("ORCID REQUEST")
+  console.log(req.body)
   if(validate_result.valid) {
     updateOrcid(req.body.primaryId, req.body.orcidId, _.get(req, "body.diProject", "default"))
-      .then(result => {res.status(200).json(result)})
-      .catch(result => {res.status(400).json(result)})
+      .then(result => {console.log({"result": result}); res.status(200).json(result)})
+      .catch(result => {console.log({"result": result}); res.status(400).json(result)})
 
   } else {
+    console.log({ "jsonschemaError": validate_result })
     res.status(400).json({ "jsonschemaError": validate_result })
   }
 
