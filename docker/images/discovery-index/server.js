@@ -85,37 +85,6 @@ runCypher(`CALL apoc.schema.assert(
 
 
 ///////////////////////////////////////
-//     RUN SAFE CYPHER QUERIES
-///////////////////////////////////////
-
-var safe_cypher_schema = JSON.parse(fs.readFileSync('./static/schemas/safe_cypher.json'))
-
-app.post('/safe_cypher', async function(req, res) {
-  var validate_result = validate(req.body, safe_cypher_schema)
-  if(validate_result.valid) {
-    var query = req.body.query
-    // TODO: are params an mutation possibility? I would think not...
-    var params = req.body.params
-    if(query.toLowerCase().search("(merge)|(create)|(delete )|(load )|(set )") != -1) {
-      res.status(400).json({"error": "Queries must be read-only; they cannot use the terms merge, create, delete, load, or set."})
-    } else {
-      // for some reason I have to do this one as try/catch rather than .then().catch() or I get a circular JSON conversion error??
-      try {
-        var result = await runCypher(query, params)
-        res.status(200).json(result.data)
-      } catch(e) {
-        res.status(400).json({"cypher execute error": e})
-      }
-      //runCypher(query, params)
-      //  .then(result => { res.status(200).json(result) })
-      //  .catch(result => { console.log(result); res.status(400).json(result) })
-    }
-  } else {
-    res.status(400).json({ "jsonschemaError": validate_result })
-  }
-})
-
-///////////////////////////////////////
 //     UPDATE RELATIONSHIP VIA API
 ///////////////////////////////////////
 
