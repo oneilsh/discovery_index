@@ -48,6 +48,9 @@ services:
       - type: bind
         target: /var/lib/neo4j/certificates/certs
         source: ./images/discovery-index/git-crypt/certs
+      - type: bind
+        target: /var/log/discovery_index
+        source: ./logs
 
   rstudio:
     image: rocker/rstudio:3.6.2

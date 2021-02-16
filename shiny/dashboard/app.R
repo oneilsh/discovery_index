@@ -1,6 +1,8 @@
 ## app.R ##
 library(shinydashboard)
 library(dplyr)
+library(visNetwork)
+library(purrr)
 
 source("neo4j.R")
 
@@ -15,7 +17,13 @@ body <- dashboardBody(
                                       label = "Query", 
                                       width = "100%", 
                                       rows = 6,
-                                      placeholder = "match a=(n) -[r]-> (q) return n, r, q"),
+                                      value = "match (n) -[r]-> (q) WHERE 
+(r.primaryId = 'thomas.sharpton@oregonstate.edu' OR
+r.primaryId = 'maude.david@oregonstate.edu')
+AND
+((NOT exists(r.type)) OR
+(NOT r.type = 'ASSOC_PRIMARY'))
+return n, r, q"),
                         actionButton("submitButton", "Submit Query", width = "100%"),
                         width = 12)
                     ),
@@ -50,7 +58,7 @@ server <- function(input, output) {
         ig <- G()
         nodes <- ig$nodes
         edges <- ig$edges
-        str(nodes)
+        #str(nodes)
         
         #nodes <- nodes %>%
         #    mutate(title = case_when(firstLabel == "GithubRepo" ~ name,
@@ -59,7 +67,11 @@ server <- function(input, output) {
         nodes$title <- nodes$firstLabel
         nodes$group <- nodes$firstLabel
         visNetwork(nodes, edges) %>%
-            visGroups(groupname = "PrimaryProfile", color = list(background = "gray"))
+            visGroups(groupname = "PrimaryProfile", color = list(background = "gray")) %>%
+            visPhysics(stabilization = FALSE, maxVelocity = 300, solver = "repulsion", repulsion = list(nodeDistance = 200, springConstant = 0.2)) 
+            #visIgraphLayout()
+        
+        
     })
     #output$result <- renderDataTable({ 
     #    G()$nodes
