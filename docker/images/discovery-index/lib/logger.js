@@ -1,4 +1,4 @@
-const simplelogger = require('simple-node-logger').createSimpleLogger('project.log');
+var simplelogger = require('simple-node-logger').createSimpleLogger("/var/log/discovery_index_requests.txt");
 
 exports.stdOutLogger = function(req, res, next) {
   console.log("== Request received:")
@@ -10,6 +10,6 @@ exports.stdOutLogger = function(req, res, next) {
 
 
 exports.requestLogger = function(req, res, next) {
-  simplelogger.info(req)
+  simplelogger.info(req.body)
   next()
 }

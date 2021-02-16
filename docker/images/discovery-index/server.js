@@ -1,4 +1,4 @@
-var { stdOutLogger } = require('./lib/logger')
+var { stdOutLogger, requestLogger } = require('./lib/logger')
 var logger = stdOutLogger
 
 var express = require('express')
@@ -19,6 +19,8 @@ var { updateProfile, updateRelationships, deleteBySource, updateRelationshipFrom
 var { orNa, getUser } = require('./lib/utils.js')
 
 var { createProxyMiddleware } = require('http-proxy-middleware')
+
+
 
 // proxy middleware options
 const options = {
@@ -44,6 +46,8 @@ api_insecure = api_insecure === "true"
 // create an express router to handle endpoints under /admin
 // read admin username and password from vars
 var authRouter = express.Router()
+
+
 admin_user = process.env.API_ADMIN_USER || "admin"
 admin_password = process.env.API_ADMIN_PASSWORD || "admin"
 user_pass_map = {}
@@ -54,13 +58,15 @@ if(api_insecure) {
   app.use('/admin', basicAuth({users: user_pass_map}), authRouter)
 }
 
-// basic logging - call logger middleware regardless of method; it calls next() to pass process on to the next middlewares
-app.use(logger)
 
 
 // call this function for every request; if it sees application/json, it parses it and stores it in the req object before continuing on
 app.use(bodyParser.json())
 authRouter.use(bodyParser.json())
+
+// basic logging - call logger middleware regardless of method; it calls next() to pass process on to the next middlewares
+// note the location: after authRouter.use(bodyParser.json()) (so that the logger has access to req.body as JSON)
+authRouter.use(requestLogger)
 
 // access files in static/ via /static/filename
 // __dirname is the location of this file
@@ -172,7 +178,6 @@ authRouter.post('/update_profile', function(req, res) {
 
 // debugs & tests
 authRouter.post('/echo', function(req, res) {
-  console.log(req.body)
   res.status(200).json(req.body)
 })
 
