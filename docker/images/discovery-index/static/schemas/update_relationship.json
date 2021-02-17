@@ -20,7 +20,27 @@
       }
     },
     {
-      "exampleDescription": "Create several new PET nodes with relationship HAS_PET",
+      "exampleDescription": "Create a new PET node with relationship HAS_PET, unless the pet name or type is empty or unset (which it is in this case)",
+      "primaryId": "oneilsh",
+      "source": "example1",
+      "clearFirst": true,
+      "ignoreIfAnyEmpty": ["target.properties.name", "target.properties.type"],
+      "edge": {
+        "label": "HAS_PET"
+      },
+      "target": {
+        "labels": [
+          "PET"
+        ],
+        "properties": {
+          "type": "Cat",
+          "name": ""
+        }
+      }
+    },
+    {
+      "exampleDescription": "Create several new PET nodes with relationship HAS_PET, using 'demo-project' as a disambiguation property added to all created nodes and edges.",
+      "diProject": "demo-project",
       "primaryId": "oneilsh",
       "source": "example1",
       "clearFirst": true,
@@ -233,6 +253,23 @@
           "target.properties.age": "integer"
         }
       ]
+    },
+    "diProject": {
+      "type": "string",
+      "description": "Property added to all nodes and edges - useful for running multiple projects in the same database/deployment.",
+      "default": "default"
+    },
+    "ignoreIfAnyEmpty": {
+      "type": "array",
+      "default": "[]",
+      "items": {
+        "type": "string",
+        "examples": [
+          "target.properties.url",
+          "edge.properties.name"
+        ]
+      },
+      "description": "Don't add relationships or nodes if any of the specified paths are unset or empty string. Useful for allowing non-answers to questions. Evaluating post-splitting if repeat is used."
     }
   },
   "required": [
