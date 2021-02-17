@@ -81,13 +81,18 @@ WITH $primaryId AS primaryId, $relationships AS relationships, p as p, $diProjec
 
 // should get JSON body matching update_relationship schema
 // required: primaryId, source, edge.label, target.labels
-// optional: repeat, convert, clearFirst, diProject
+// optional: repeat, convert, clearFirst, diProject, ignoreIfAnyEmpty
+// TODO: add diProject and ignoreIfAnyEmpty to schema
 exports.updateRelationshipFromApi = async function(relationship) {
   try {
     relationship.diProject = _.get(relationship, "diProject", "default")
 
     if(relationship.clearFirst) {
       await deleteBySource(relationship.primaryId, relationship.source, relationship.diProject)
+    }
+    var ignoreIfAnyEmpty = []
+    if(relationship.ignoreIfAnyEmpty) {
+      ignoreIfAnyEmpty = relationship.ignoreIfAnyEmpty
     }
 
     // make sure properties exists at least even if empty
@@ -135,6 +140,16 @@ exports.updateRelationshipFromApi = async function(relationship) {
 
       relationship.edge.properties.hashId = hash(relationship.edge)
       relationship.target.properties.hashId = hash(relationship.target)
+    })
+
+    canonicalRelationships = canonicalRelationships.filter(rel => {
+      var ok = true
+      for(var i = 0; i < ignoreIfAnyEmpty.length; i++) {
+        var checkPath = ignoreIfAnyEmpty[i]
+        var relValue = _.get(rel, checkPath, "")
+        if(relValue == "") { ok = false }
+      }
+      return ok
     })
 
     var edgeLabel = relationship.edge.label

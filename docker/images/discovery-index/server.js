@@ -1,4 +1,4 @@
-var { stdOutLogger, requestLogger } = require('./lib/logger')
+var { stdOutLogger, adminRequestLogger } = require('./lib/logger')
 var logger = stdOutLogger
 
 var express = require('express')
@@ -66,7 +66,7 @@ authRouter.use(bodyParser.json())
 
 // basic logging - call logger middleware regardless of method; it calls next() to pass process on to the next middlewares
 // note the location: after authRouter.use(bodyParser.json()) (so that the logger has access to req.body as JSON)
-authRouter.use(requestLogger)
+authRouter.use(adminRequestLogger)
 
 // access files in static/ via /static/filename
 // __dirname is the location of this file

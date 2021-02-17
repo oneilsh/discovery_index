@@ -1,4 +1,10 @@
-var simplelogger = require('simple-node-logger').createSimpleLogger("/var/log/discovery_index/requests.txt");
+var simplelogger = require('simple-node-logger')
+                       .createSimpleFileLogger({
+                         logFilePath: "/var/log/discovery_index/admin_requests.txt",
+                         timestampFormat:'YYYY-MM-DD_HH:mm:ss.SSS'
+                       });
+var _ = require('lodash')
+
 
 exports.stdOutLogger = function(req, res, next) {
   console.log("== Request received:")
@@ -9,7 +15,9 @@ exports.stdOutLogger = function(req, res, next) {
 }
 
 
-exports.requestLogger = function(req, res, next) {
-  simplelogger.info(req.body)
+exports.adminRequestLogger = function(req, res, next) {
+  headers_copy = _.cloneDeep(req.headers)
+  if(headers_copy.authorization) { headers_copy.authorization = "REDACTED" }
+  simplelogger.info({"method": req.method, "data": req.body, "url": req.url, "headers": headers_copy})
   next()
 }
