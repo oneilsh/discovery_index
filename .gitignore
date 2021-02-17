@@ -5,3 +5,4 @@ package-lock.json
 docker/images/discovery-index/git-crypt/certs/private.key
 docker/images/discovery-index/git-crypt/certs/public.crt
 docker/images/discovery-index/git-crypt/certs/trusted/public.crt
+docker/logs/*.txt
