@@ -1,0 +1,17 @@
+{
+  "name": "axioser",
+  "version": "0.1.0",
+  "description": "Command-line interface to axios for REST calls",
+  "main": "main.js",
+  "scripts": {
+    "test": " echo '{\"method\": \"get\", \"url\": \"https://api.monarchinitiative.org/api/bioentity/gene/NCBIGene%3A17988/models\"}' | axioser"
+  },
+  "bin": {
+    "axioser": "main.js"
+  },
+  "author": "Shawn T. O'Neil",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.21.1"
+  }
+}
