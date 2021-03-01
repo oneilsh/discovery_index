@@ -1,9 +1,11 @@
 ## app.R ##
+#library(renv)
+
 library(shinydashboard)
 library(dplyr)
 library(visNetwork)
 library(purrr)
-library(shinyTypeahead)
+
 
 source("neo4j.R")
 
