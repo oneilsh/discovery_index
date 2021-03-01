@@ -57,7 +57,7 @@ services:
       - "3838"
     env_file:
       - images/discovery-index/git-crypt/RUN_VARS
-    volumes:
-      - type: bind
-        source: ../shiny/dashboard/
-        target: /srv/shiny-server/
+#    volumes:
+#      - type: bind
+#        source: ../shiny/dashboard/
+#        target: /srv/shiny-server/
