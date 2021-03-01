@@ -25,11 +25,8 @@ chr_to_list <- function(x) {
   return(result)
 }
 
-print("UMMMM")
-print(Sys.getenv("NEO_URL", "https://tehr-discovery-index.cgrb.oregonstate.edu:7473"))
-
 con <- neo4j_api$new(
-  url = Sys.getenv("NEO_URL", "https://tehr-discovery-index.cgrb.oregonstate.edu:7473"),
+  url = Sys.getenv("NEO_URL", "https://tehr-discovery-index-hellooooo.cgrb.oregonstate.edu:7473"),
   user = Sys.getenv("NEO4J_USER", "neo4j"),
   password = Sys.getenv("NEO4J_PASS", "neo4j")
 )
