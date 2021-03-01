@@ -2,6 +2,7 @@ node_modules/
 .*.swp
 package-lock.json
 .Rproj.user
+.Rhistory
 docker/images/discovery-index/git-crypt/certs/private.key
 docker/images/discovery-index/git-crypt/certs/public.crt
 docker/images/discovery-index/git-crypt/certs/trusted/public.crt
