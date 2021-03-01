@@ -57,6 +57,8 @@ services:
       - "3838"
     env_file:
       - images/discovery-index/git-crypt/RUN_VARS
+    environment:
+      NEO_URL: http://neo4j:7474
 #    volumes:
 #      - type: bind
 #        source: ../shiny/dashboard/
