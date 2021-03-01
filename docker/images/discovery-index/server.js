@@ -24,16 +24,17 @@ var { createProxyMiddleware } = require('http-proxy-middleware')
 
 // proxy middleware options
 const options = {
-  target: 'http://rstudio:8787', // target host
+  target: 'http://rshiny:3838', // target host
   changeOrigin: true, // needed for virtual hosted sites
   autoRewrite: true,
   ws: true, // proxy websockets
+  //logLevel: 'info',
   pathRewrite: {
-    '^/rstudio/': '', // remove base path
+    '^/dashboard': '', // remove base path
   }
 }
 
-app.use('/rstudio', createProxyMiddleware(options))
+app.use('/dashboard', createProxyMiddleware(options))
 
 
 // TODO: drop usage of backpointers in favor of explicit searching for nodes without paths to
@@ -193,9 +194,9 @@ app.get('/user/:primaryId', function(req, res) {
 */
 
 // last resort if no previous route matched
-//app.use('*', function(req, res, next) {
-//  res.status(404).send({err: "The requested resource doesn't exist."})
-//})
+app.use('*', function(req, res, next) {
+  res.status(404).send({err: "The requested resource doesn't exist."})
+})
 
 
 /////////   Run main proces

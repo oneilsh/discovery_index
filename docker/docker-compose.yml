@@ -2,14 +2,13 @@ version: "3.7"
 
 volumes:
   neo4jstorage:
-  rstudioStorage:
 
 services:
   api:
     #depends_on:
     #  - neo4j
     build: images/discovery-index
-    image: oneilsh/discovery-index:0.1.3
+    # image: oneilsh/discovery-index:0.1.3
     ports:
       - "443:443"
     environment:
@@ -52,11 +51,13 @@ services:
         target: /var/lib/neo4j/certificates/certs
         source: ./images/discovery-index/git-crypt/certs
 
-  rstudio:
-    image: rocker/rstudio:3.6.2
+  rshiny:
+    build: images/rshiny
     expose: # these ports are only exposed to the docker service network (using non-ssl interface for internal traffic)
-      - "8787"
-    environment:
-      PASSWORD: dumbpassword
+      - "3838"
+    env_file:
+      - images/discovery-index/git-crypt/RUN_VARS
     volumes:
-      - rstudioStorage:/data/rstudio
+      - type: bind
+        source: ../shiny/dashboard/
+        target: /srv/shiny-server/
