@@ -18,17 +18,16 @@ var { updateOrcid } = require('./lib/orcid.js')
 var { updateProfile, updateRelationships, deleteBySource, updateRelationshipFromApi } = require('./lib/general.js')
 var { orNa, getUser } = require('./lib/utils.js')
 
+
 var { createProxyMiddleware } = require('http-proxy-middleware')
-
-
 
 // proxy middleware options
 const options = {
   target: 'http://rshiny:3838', // target host
   changeOrigin: true, // needed for virtual hosted sites
-  autoRewrite: true,
+  autoRewrite: false,
   ws: true, // proxy websockets
-  //logLevel: 'info',
+  logLevel: 'debug',
   pathRewrite: {
     '^/dashboard': '', // remove base path
   }

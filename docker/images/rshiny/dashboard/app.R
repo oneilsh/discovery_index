@@ -1,6 +1,7 @@
 ## app.R ##
 #library(renv)
 
+
 library(shinydashboard)
 library(dplyr)
 library(visNetwork)
@@ -47,7 +48,6 @@ primaryIdServer <- function(id) {
       ((NOT exists(r.type)) OR
         (NOT r.type = 'ASSOC_PRIMARY'))
       return n, r, q"
-      print(query)
       run_query(query)
     })
     
@@ -123,7 +123,11 @@ body <- dashboardBody(
   tabItems(
     tabItem(tabName = "neoTest", 
             tagList(
-              primaryIdUI("primaryId")
+              primaryIdUI("primaryId"),
+              p(Sys.getenv("NEO_URL", "NA")), 
+              p(Sys.getenv("NEO4J_USER", "NA")), 
+              p(Sys.getenv("NEO4J_PASS", "NA"))
+              
               #cypherQueryUI("cypher")
             )
     )
@@ -142,7 +146,8 @@ ui <- dashboardPage(header, sidebar, body)
 
 server <- function(input, output, session) {
   #cypherQueryServer("cypher")
-  primaryIdServer("primaryId")
+
+  #primaryIdServer("primaryId")
 }
 
 shinyApp(ui, server)
