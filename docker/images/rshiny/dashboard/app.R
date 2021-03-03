@@ -123,11 +123,7 @@ body <- dashboardBody(
   tabItems(
     tabItem(tabName = "neoTest", 
             tagList(
-              primaryIdUI("primaryId"),
-              p(Sys.getenv("NEO_URL", "NA")), 
-              p(Sys.getenv("NEO4J_USER", "NA")), 
-              p(Sys.getenv("NEO4J_PASS", "NA"))
-              
+              primaryIdUI("primaryId")
               #cypherQueryUI("cypher")
             )
     )
@@ -147,7 +143,7 @@ ui <- dashboardPage(header, sidebar, body)
 server <- function(input, output, session) {
   #cypherQueryServer("cypher")
 
-  #primaryIdServer("primaryId")
+  primaryIdServer("primaryId")
 }
 
 shinyApp(ui, server)

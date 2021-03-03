@@ -16,4 +16,6 @@ WORKDIR /srv/shiny-server
 COPY dashboard/* ./
 COPY run.sh .
 
+COPY shiny-server.conf /etc/shiny-server/shiny-server.conf
+
 ENTRYPOINT [ "./run.sh" ]
