@@ -27,7 +27,7 @@ const options = {
   changeOrigin: true, // needed for virtual hosted sites
   autoRewrite: false,
   ws: true, // proxy websockets
-  logLevel: 'debug',
+  logLevel: 'info',
   pathRewrite: {
     '^/dashboard': '', // remove base path
   }

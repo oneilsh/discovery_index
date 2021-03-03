@@ -28,7 +28,7 @@ primaryIdUI <- function(id) {
           width = 12)
     ),
     fluidRow(
-      box(visNetworkOutput(ns("network")), width = 12)
+      box(visNetworkOutput(ns("network"), height = "500px"), width = 12)
       ##box(width = 2),
       #box(dataTableOutput(outputId = "result"), width = 10)
     )
@@ -46,7 +46,8 @@ primaryIdServer <- function(id) {
        (r.primaryId IN " %.% chr_to_list(input$searchResult) %.% ")
       AND
       ((NOT exists(r.type)) OR
-        (NOT r.type = 'ASSOC_PRIMARY'))
+        (NOT r.type = 'ASSOC_PRIMARY')
+      )
       return n, r, q"
       run_query(query)
     })
@@ -86,7 +87,7 @@ return n, r, q"),
                   width = 12)
             ),
             fluidRow(
-              box(visNetworkOutput(ns("network")), width = 12)
+              box(visNetworkOutput(ns("network"), height = "100%"), width = 12)
               ##box(width = 2),
               #box(dataTableOutput(outputId = "result"), width = 10)
             )

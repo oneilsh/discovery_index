@@ -268,7 +268,7 @@ format_OrcidProfile <- function(G) {
   }) %>% unlist()
   G$nodes$title[select] <- lapply(G$nodes$properties[select], function(x) {
      "<p>" %.% 
-      "<b>ORCiD:</b> " %.% x$orcid %.% "<br /><br />" %.%
+      "<b>ORCiD:</b> <a href='https://orcid.org/" %.% x$orcid  %.% "'>" %.% x$orcid %.% "</a><br /><br />" %.%
       "<b>Bio:</b> " %.% x$bio %.% "<br /><br />" %.%
       "</p>"
   }) %>% unlist()
