@@ -6,23 +6,35 @@ library(shinydashboard)
 library(dplyr)
 library(visNetwork)
 library(purrr)
+library(stringr)
 
 
 source("neo4j.R")
+
+diProject <- function(session) {
+  query <- parseQueryString(session$clientData$url_search)
+  if(!is.null(query) && !is.null(query$diProject)) {
+    # sanitize
+    return(str_replace_all(query$diProject, "[^A-Za-z0-9_-]", ""))
+  } else {
+    res <- run_query_table("match (n) return n.diProject limit 1")
+    return(res$n.diProject[1,1])
+  }
+}
+
 
 
 
 primaryIdUI <- function(id) {
   ns <- NS(id)
   
-  primaryIdDf <- run_query_table("match (n:PrimaryProfile) return n.primaryId") %>% as.data.frame()
-  colnames(primaryIdDf) <- "primaryId"
+
 
   tagList(
     fluidRow(
       box(selectizeInput(inputId = ns("searchResult"), 
                         label = "Search...",
-                        choices = primaryIdDf$primaryId,
+                        choices = NULL,
                         multiple = TRUE,
                         selected = NULL),
           width = 12)
@@ -41,8 +53,19 @@ primaryIdUI <- function(id) {
 primaryIdServer <- function(id) {
   moduleServer(id, function(input, output, session) {
     
+    observe({
+      diProject <- diProject(session)
+      primaryIdDf <- run_query_table("match (n:PrimaryProfile {diProject: '" %.% diProject %.% "'}) return n.primaryId") %>% as.data.frame()
+      if(ncol(primaryIdDf) > 0) {
+        colnames(primaryIdDf) <- "primaryId"
+        updateSelectizeInput(inputId = "searchResult", session, choices = primaryIdDf$primaryId)
+      }
+    })
+      
     G <- eventReactive(input$searchResult, {
-      query <- "match (n) -[r]-> (q) WHERE 
+      project <- diProject(session)
+      
+      query <- "match (n) -[r {diProject: '"  %.% project %.%  "'}]-> (q) WHERE 
        (r.primaryId IN " %.% chr_to_list(input$searchResult) %.% ")
       AND
       ((NOT exists(r.type)) OR
@@ -53,7 +76,9 @@ primaryIdServer <- function(id) {
     })
     
     dt <- eventReactive(input$searchResult, {
-      query <- "match (n) -[r]-> (q) WHERE 
+      project <- diProject(session)
+      
+      query <- "match (n) -[r {diProject: '"  %.% project %.%  "'}]-> (q) WHERE 
        (r.primaryId IN " %.% chr_to_list(input$searchResult) %.% ")
       AND
       ((NOT exists(r.type)) OR
@@ -62,9 +87,13 @@ primaryIdServer <- function(id) {
       AND
       (q:Work)
       return DISTINCT r.primaryId AS `Primary ID`, q.journalTitle AS `Venue`, count(q.journalTitle) as `Count`"
+      res_df <- data.frame(`Primary ID` = c(), Venue = c(), Count = c())
       res <- run_query_table(query) %>% as.data.frame()
-      colnames(res) <- c("Primary ID", "Venue", "Count")
-      return(res)
+      if(ncol(res) > 0) {
+        colnames(res) <- c("Primary ID", "Venue", "Count")
+        res_df <- rbind(res, res_df)
+      }
+      return(res_df)
     })
     
     output$network <- renderVisNetwork({
@@ -79,7 +108,8 @@ primaryIdServer <- function(id) {
     
     output$pubTable <- renderDataTable({
       dt()
-    })
+      # TODO: hmm how do I show a better message for no data
+    }, options = list(language = list(infoEmpty = 'My Custom No Data Message'), paging = TRUE))
     
   })
 }
