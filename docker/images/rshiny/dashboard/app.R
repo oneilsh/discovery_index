@@ -28,9 +28,9 @@ primaryIdUI <- function(id) {
           width = 12)
     ),
     fluidRow(
-      box(visNetworkOutput(ns("network"), height = "500px"), width = 12)
+      box(visNetworkOutput(ns("network"), height = "500px"), width = 12),
       ##box(width = 2),
-      #box(dataTableOutput(outputId = "result"), width = 10)
+      box(dataTableOutput(ns("pubTable")), width = 12)
     )
     
   )
@@ -52,6 +52,21 @@ primaryIdServer <- function(id) {
       run_query(query)
     })
     
+    dt <- eventReactive(input$searchResult, {
+      query <- "match (n) -[r]-> (q) WHERE 
+       (r.primaryId IN " %.% chr_to_list(input$searchResult) %.% ")
+      AND
+      ((NOT exists(r.type)) OR
+        (NOT r.type = 'ASSOC_PRIMARY')
+      )
+      AND
+      (q:Work)
+      return DISTINCT r.primaryId AS `Primary ID`, q.journalTitle AS `Venue`, count(q.journalTitle) as `Count`"
+      res <- run_query_table(query) %>% as.data.frame()
+      colnames(res) <- c("Primary ID", "Venue", "Count")
+      return(res)
+    })
+    
     output$network <- renderVisNetwork({
       ig <- G()
       
@@ -60,7 +75,10 @@ primaryIdServer <- function(id) {
         visIgraphLayout(smooth = TRUE, physics = TRUE, type = "full") 
       #visPhysics(stabilization = FALSE, maxVelocity = 300, solver = "repulsion", repulsion = list(nodeDistance = 200, springConstant = 0.2)) 
       
-      
+    })
+    
+    output$pubTable <- renderDataTable({
+      dt()
     })
     
   })
