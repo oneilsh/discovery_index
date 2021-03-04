@@ -85,6 +85,7 @@ format_Default <- function(G) {
   select <- G$nodes$title == ""
   # pick indices for colors into the colors_107 by getting a hash digest of each relationship type
   # and mapping it to an int between 1 and 107
+  # TODO: this chokes if there's no data
   color_indices <- G$nodes$firstLabel[select] %>% digest2int() %>% `%%`(107) %>% `+`(1)
   G$nodes$color[select] <- colors_107[color_indices]
   

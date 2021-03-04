@@ -55,7 +55,11 @@ user_pass_map[admin_user] = admin_password
 if(api_insecure) {
   app.use('/admin', authRouter)
 } else {
-  app.use('/admin', basicAuth({users: user_pass_map}), authRouter)
+  app.use('/admin', basicAuth({users: user_pass_map, 
+                               unauthorizedResponse: req => {
+                                 return {result: "authError", auth: req.auth}
+                               }
+                             }), authRouter)
 }
 
 
