@@ -27,17 +27,22 @@ chr_to_list <- function(x) {
 
 
 con <- neo4j_api$new(
-  url = Sys.getenv("NEO_URL", "https://tehr-discovery-index.cgrb.oregonstate.edu:7473"),
+  url = Sys.getenv("NEO_URL", "https://tehr-discovery-index-dev.cgrb.oregonstate.edu:7473"),
   user = Sys.getenv("NEO4J_USER", "neo4j"),
   password = Sys.getenv("NEO4J_PASS", "neo4j")
 )
 
 run_query <- function(query_str) {
   G <- query_str %>%
-    call_neo4j(con, type = "graph") %>%
-    format_nodes()
-    #neo_to_propgraph()
-  return(G)
+    call_neo4j(con, type = "graph") 
+  
+  if(is.null(G$nodes)) {
+    G <- list(nodes = data.frame(id = "dummy"), relationships = data.frame(to = "dummy", from = "dummy"))
+    G$nodes <- G$nodes[FALSE, , drop = FALSE]
+    G$relationships <- G$relationships[FALSE, , drop = FALSE]
+  }
+  
+  format_nodes(G)
 }
 
 run_query_table <- function(query_str) {
@@ -50,7 +55,8 @@ run_query_table <- function(query_str) {
 
 format_nodes <- function(G) {
   ## don't try anything if there's no data!
-  if(is.null(G) || is.null(G$nodes) || nrow(G$nodes) < 1) { return(G) }
+  if(nrow(G$nodes) < 1) { return(G) }
+  
   G$relationships$from <- G$relationships$startNode
   G$relationships$to <- G$relationships$endNode
   G$relationships$label <- G$relationships$type
