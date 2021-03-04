@@ -49,6 +49,8 @@ run_query_table <- function(query_str) {
 
 
 format_nodes <- function(G) {
+  ## don't try anything if there's no data!
+  if(is.null(G) || is.null(G$nodes) || nrow(G$nodes) < 1) { return(G) }
   G$relationships$from <- G$relationships$startNode
   G$relationships$to <- G$relationships$endNode
   G$relationships$label <- G$relationships$type
@@ -86,7 +88,7 @@ format_Default <- function(G) {
   # pick indices for colors into the colors_107 by getting a hash digest of each relationship type
   # and mapping it to an int between 1 and 107
   # TODO: this chokes if there's no data
-  color_indices <- G$nodes$firstLabel[select] %>% digest2int() %>% `%%`(107) %>% `+`(1)
+  color_indices <- G$nodes$firstLabel[select] %>% as.character() %>% digest2int() %>% `%%`(107) %>% `+`(1)
   G$nodes$color[select] <- colors_107[color_indices]
   
   G$nodes$label[select] <- "Other: " %.% G$nodes$firstLabel[select] 
