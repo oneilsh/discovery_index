@@ -149,8 +149,11 @@
           "default": "{}",
           "description": "Additional properties to set on new edge(s). Must be string or number values only currently. ",
           "patternProperties": {
-            ".*": {
-              "type": "string"
+            "diStyle": {
+              "type": "object"
+            },
+            "^(?!diStyle).*$": {
+              "type": ["string", "number"]
             }
           },
           "examples": [
@@ -188,15 +191,18 @@
           "type": "object",
           "default": "{}",
           "description": "Additional properties to set on new target node(s). Must be numeric or string currently. ",
-          "patternProperties": {
-            ".*": {
-              "type": "string"
+          "patternProperties": { 
+            "diStyle": {
+              "type": "object"
+            },
+            "^(?!diStyle).*$": {
+              "type": ["string", "number"]
             }
           },
           "examples": [
             {
               "name": "Shawn",
-              "age": "37"
+              "age": 37
             },
             {
               "name": "Shawn",

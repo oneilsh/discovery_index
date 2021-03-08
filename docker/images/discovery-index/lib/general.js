@@ -101,6 +101,10 @@ exports.updateRelationshipFromApi = async function(relationship) {
     relationship.target.properties = _.get(relationship, "target.properties", {})
     relationship.edge.properties = _.get(relationship, "edge.properties", {})
 
+    // convert diStyle objects to string for DB storage
+    if(relationship.target.properties.diStyle) { relationship.target.properties.diStyle = JSON.stringify(relationship.target.properties.diStyle)}
+    if(relationship.edge.properties.diStyle) { relationship.edge.properties.diStyle = JSON.stringify(relationship.edge.properties.diStyle)}
+
     canonicalRelationships = []
 
     if(relationship.repeat) {
