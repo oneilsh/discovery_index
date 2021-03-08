@@ -81,8 +81,10 @@ WITH $primaryId AS primaryId, $relationships AS relationships, p as p, $diProjec
 
 // should get JSON body matching update_relationship schema
 // required: primaryId, source, edge.label, target.labels
-// optional: repeat, convert, clearFirst, diProject, ignoreIfAnyEmpty
-// TODO: add diProject and ignoreIfAnyEmpty to schema
+// optional: repeat, convert, clearFirst, diProject, ignoreIfAnyEmpty, edge.style, target.style
+//   target.properties.diStyle and edge.properties.diStyle if defined should be objects e.g. {color: "#a4cc54", title: "hovertext here", label: "Display Name", ...}
+//   where keys are config options defined by vizNetwork (https://datastorm-open.github.io/visNetwork/nodes.html and https://datastorm-open.github.io/visNetwork/edges.html)
+//   we store them as JSON string in the db
 exports.updateRelationshipFromApi = async function(relationship) {
   try {
     relationship.diProject = _.get(relationship, "diProject", "default")
