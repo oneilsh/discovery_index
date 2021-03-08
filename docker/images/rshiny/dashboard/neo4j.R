@@ -70,6 +70,8 @@ format_nodes <- function(G) {
   #G$nodes$group <- G$nodes$firstLabel
 
   G <- format_Default(G)
+  G <- format_diStyle(G, what = "nodes")
+  G <- format_diStyle(G, what = "relationships")
   G <- format_OrcidProfile(G)
   G <- format_OrcidWork(G)
   G <- format_PrimaryProfile(G)
@@ -80,6 +82,8 @@ format_nodes <- function(G) {
   G <- format_ProgrammingLanguage(G)
   return(G)
 }
+
+
 
 format_Default <- function(G) {
   G$nodes$label <- ""
@@ -127,7 +131,7 @@ format_ProgrammingLanguage <- function(G) {
   G$nodes$color[select] <- "#fb9a99"
   G$nodes$label[select] <- lapply(G$nodes$properties[select], function(x) {
     "Prog. Language: " %.% x$name
-  })
+  }) %>% unlist()
   
   select <- G$relationships$type == "HAS_PROGRAMMING_LANGUAGE"
   G$relationships$color[select] <- "#fb9a99"
@@ -142,7 +146,7 @@ format_ExternalId <- function(G) {
   G$nodes$color[select] <- "#d9d9d9"
   G$nodes$label[select] <- lapply(G$nodes$properties[select], function(x) {
     "UID: " %.% x$type
-  })  
+  }) %>% unlist()
   G$nodes$size[select] <- 10
   G$nodes$title[select] <- lapply(G$nodes$properties[select], function(x) {
     "<p>" %.% 
@@ -160,7 +164,7 @@ format_URL <- function(G) {
   G$nodes$color[select] <- "#ffed6f"
   G$nodes$label[select] <- lapply(G$nodes$properties[select], function(x) {
     "URL: " %.% x$title
-  })  
+  }) %>% unlist()
   
   G$nodes$title[select] <- lapply(G$nodes$properties[select], function(x) {
     "<p>" %.% 
@@ -181,10 +185,10 @@ format_GithubRepo <- function(G) {
   G$nodes$color[select] <- "#ccebc5"
   G$nodes$label[select] <- lapply(G$nodes$properties[select], function(x) {
     "Repo: " %.% x$name
-  })  
+  }) %>% unlist()
   G$nodes$size[select] <- lapply(G$nodes$properties[select], function(x) {
     log(1+x$watchersCount) + 20
-  })  
+  }) %>% unlist()
   G$nodes$title[select] <- lapply(G$nodes$properties[select], function(x) {
     "<p>" %.% 
       "<b>Name:</b> " %.% "<a href='" %.% x$url %.% "'>" %.%  x$name %.% "</a><br /><br />" %.%
@@ -212,7 +216,7 @@ format_GithubProfile <- function(G) {
   )
   G$nodes$label[select] <- lapply(G$nodes$properties[select], function(x) {
     "Github: " %.% x$username
-  })  
+  }) %>% unlist()
   G$nodes$title[select] <- lapply(G$nodes$properties[select], function(x) {
     "<p>" %.% 
       ifelse(is.null(x$username), "", "<b>Username:</b> " %.% x$username %.% "<br /><br />") %.%
@@ -237,7 +241,7 @@ format_PrimaryProfile <- function(G) {
   G$nodes$size[select] <- G$nodes$size[select]*2
   G$nodes$label[select] <- lapply(G$nodes$properties[select], function(x) {
     "Primary: " %.% x$primaryId
-  })
+  }) %>% unlist()
   
   select <- G$relationships$type == "HAS_SECONDARY_PROFILE"
   G$relationships$label[select] <- ""
@@ -252,7 +256,7 @@ format_OrcidWork <- function(G) {
   G$nodes$color[select] <- "#b2df8a"
   G$nodes$label[select] <- lapply(G$nodes$properties[select], function(x) {
     "Work: " %.% x$journalTitle %.% ", " %.%  x$year
-  })
+  }) %>% unlist()
   G$nodes$title[select] <- lapply(G$nodes$properties[select], function(x) {
     "<p>" %.% 
       "<b>Title:</b> " %.% "<a href='" %.% x$url %.% "'>" %.%  x$title %.% "</a><br /><br />" %.%
@@ -285,9 +289,47 @@ format_OrcidProfile <- function(G) {
   return(G)
 }
 
+# this one is tricky; each row may have an optional property entry "diStyle" containing a JSON string e.g.
+# '{"color": "$ff0000", "size": 20}'; these need to be decoded to column entries
+# this may not be the prettiest way to do this...
+# (we do the same thing for nodes and edges separately, so we just parameterize this function on which element of G we want to fix up)
+format_diStyle <- function(G, what = "nodes") {
+  nodes_col_names <- lapply(G[[what]]$properties, function(nodeProps) {
+    if(!is.null(nodeProps$diStyle)) {
+      obj <- jsonlite::fromJSON(nodeProps$diStyle)
+      return(names(obj))
+    }
+  }) %>% unlist() %>% unique()
+  
+  for(colname in nodes_col_names) {
+    # if there's no col set yet, fill it out with NA
+    if(is.null(G[[what]][[colname]])) { G[[what]][[colname]] <- NA }
+    
+    # now we need to update each, but we only want to do so for those that explicitly set it
+    select <- lapply(G[[what]]$properties, function(nodeProps) {
+      if(!is.null(nodeProps$diStyle)) {
+        obj <- jsonlite::fromJSON(nodeProps$diStyle)
+        return(colname %in% names(obj))
+      } else {
+        return(FALSE)
+      }
+    }) %>% unlist()
+    
+    G[[what]][[colname]][select] <- lapply(G[[what]]$properties[select], function(nodeProps) {
+      obj <- jsonlite::fromJSON(nodeProps$diStyle)
+      obj[[colname]]
+    }) %>% unlist()
+  }
+  
+  return(G)
+}
 
 
-G <- run_query("match (o) -[r2 {primaryId: 'melissa@tislab.org'}]-> (t)  return o, r2, t")
+G <- run_query("match (p) -[r]-> (t)  WHERE
+               t:Food OR
+               t:Timezone
+               return p, r, t") 
+
 print(visNetwork(G$nodes, G$relationships) %>%
   visIgraphLayout(smooth = TRUE, physics = TRUE) ) %>%
   visOptions(highlightNearest = list(enabled = T, degree = 1, hover = T), collapse = TRUE)
