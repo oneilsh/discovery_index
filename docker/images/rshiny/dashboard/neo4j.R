@@ -97,11 +97,10 @@ format_Default <- function(G) {
   select <- G$nodes$title == ""
   # pick indices for colors into the colors_107 by getting a hash digest of each relationship type
   # and mapping it to an int between 1 and 107
-  # TODO: this chokes if there's no data
   color_indices <- G$nodes$firstLabel[select] %>% as.character() %>% digest2int() %>% `%%`(107) %>% `+`(1)
   G$nodes$color[select] <- colors_107[color_indices]
   
-  G$nodes$label[select] <- "Other: " %.% G$nodes$firstLabel[select] 
+  G$nodes$label[select] <- G$nodes$firstLabel[select] 
   G$nodes$title[select] <- lapply(G$nodes$properties[select], function(x) {
     "<h3>Node</h3><p>" %.% 
       paste("<b>" %.% names(x) %.% "</b>" %.% ": " %.% x, collapse = "<br /><br />") %.%
@@ -121,6 +120,23 @@ format_Default <- function(G) {
       "</p>"
      }) %>% unlist())
   
+  ## "name" shall be special, used to determine node and edge labels if present
+  select <- G$nodes$properties %>% lapply(function(nodeProps) {
+    "name" %in% names(nodeProps)
+  }) %>% unlist()
+  
+  G$nodes$label[select] <- G$nodes$label[select] %.% ": " %.% (G$nodes$properties[select] %>% lapply(function(nodeProps) {
+    nodeProps$name
+  }) %>% unlist())
+  
+  # and "name" for edges
+  select <- G$relationships$properties %>% lapply(function(nodeProps) {
+    "name" %in% names(nodeProps)
+  }) %>% unlist()
+  
+  G$relationships$label[select] <- G$relationships$label[select] %.% ": " %.% (G$relationships$properties[select] %>% lapply(function(nodeProps) {
+    nodeProps$name
+  }) %>% unlist())
   
   return(G)
 }
