@@ -186,6 +186,7 @@ var update_profile_schema = JSON.parse(fs.readFileSync('./static/schemas/delete_
 authRouter.post('/delete_source', function(req, res) {
   var validate_result = validate(req.body, update_profile_schema)
   if(validate_result.valid) {
+    if(!req.body.clearFirst) { req.body.clearFirst = false }
     if(!req.body.diProject) { req.body.diProject = "default" }
     deleteBySource(req.body.primaryId, req.body.source, req.body.diProject)
       .then(result => {res.status(200).json(result)})

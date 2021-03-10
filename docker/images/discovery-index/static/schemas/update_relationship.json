@@ -223,7 +223,7 @@
     "clearFirst": {
       "type": "boolean",
       "description": "Whether or not to first clear out existing relationships matching given 'source' key.",
-      "default": true
+      "default": false
     },
     "repeat": {
       "type": "object",
@@ -289,7 +289,6 @@
     "primaryId",
     "source",
     "edge",
-    "target",
-    "clearFirst"
+    "target"
   ]
 }
