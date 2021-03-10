@@ -39,7 +39,7 @@ WITH r as r
   NOT (n:PrimaryProfile)
   DETACH DELETE n
 `
-    console.log("Removing relationships and nodes for primaryId " + primaryId + " from source " + source)
+    console.log("Removing relationships and nodes for primaryId " + primaryId + " from source " + source + " in project " + diProject)
     await runCypher(query, params)
 
   } catch(e) {
