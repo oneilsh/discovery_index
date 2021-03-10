@@ -1,0 +1,35 @@
+{
+    "type": "object",
+    "properties": {
+      "primaryId": {
+        "type": "string",
+        "description": "Primary ID to delete relationships for.",
+        "examples": [
+          "user@your.org.com",
+          "9248840149"
+        ]
+      },
+      "source": {
+        "type": "string",
+        "description": "The \"source\" value to match relationships' source entry (a required field). ",
+        "examples": [
+          "formQuestion1",
+          "My Precious Survey",
+          "market research"
+        ]
+      },
+      "diProject": {
+        "type": "string",
+        "default": "default",
+        "description": "diProject to use (if hosting multiple projects in one instance).",
+        "examples": [
+          "osu-ehrc-index",
+          "tislab-members"
+        ]
+      }
+    },
+    "required": [
+      "primaryId",
+      "source"
+    ]
+  }
