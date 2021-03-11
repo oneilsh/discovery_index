@@ -12,10 +12,15 @@ services:
     ports:
       - "443:443"
     environment:
-      - PORT=443
-      - NEO_4J_ENDPOINT=http://neo4j:7474/db/data/cypher
-    env_file:
-      - images/discovery-index/git-crypt/RUN_VARS
+      PORT: 443
+      NEO_4J_ENDPOINT: http://neo4j:7474/db/data/cypher
+      NEO4J_USER: "neo4j"
+      NEO4J_PASS: ${ADMIN_PASS}
+      GITHUB_ACCESS_TOKEN: ${GITHUB_TOKEN}
+      API_ADMIN_USER: ${ADMIN_USER}
+      API_ADMIN_PASSWORD: ${ADMIN_PASS}
+    #env_file:
+    #  - images/discovery-index/git-crypt/RUN_VARS
     command: npm run prod
 
     volumes:
@@ -33,19 +38,24 @@ services:
       - neo4jstorage:/var/lib/neo4j
     image: neo4j:3.5
     environment:
+      NEO4J_dbms_connector_http_listen__address: 0.0.0.0:7474
+      NEO4J_dbms_connector_https_listen__address: 0.0.0.0:7473
       NEO4J_dbms_logs_debug_level: DEBUG
       NEO4J_dbms_ssl_policy_certs_base__directory: certificates/certs
       NEO4J_dbms_ssl_policy_certs_client__auth: "NONE"
       NEO4J_bolt_ssl__policy: certs
       NEO4J_https_ssl__policy: certs
       NEO4JLABS_PLUGINS: '["apoc"]'
+      NEO4J_USER: neo4j
+      NEO4J_PASS: ${ADMIN_PASS:-adminpass}
+      NEO4J_AUTH: "neo4j/${ADMIN_PASS:-adminpass}"
     ports:  # these ports are mapped to ports on the host machine
       - "7473:7473"
       - "7687:7687"
     expose: # these ports are only exposed to the docker service network (using non-ssl interface for internal traffic)
       - "7474"
-    env_file:
-      - images/discovery-index/git-crypt/RUN_VARS
+    #env_file:
+    #  - images/discovery-index/git-crypt/RUN_VARS
     volumes:
       - type: bind
         target: /var/lib/neo4j/certificates/certs
@@ -55,10 +65,12 @@ services:
     build: images/rshiny
     expose: # these ports are only exposed to the docker service network (using non-ssl interface for internal traffic)
       - "3838"
-    env_file:
-      - images/discovery-index/git-crypt/RUN_VARS
     environment:
       NEO_URL: http://neo4j:7474
+      NEO4J_USER: ${ADMIN_USER}
+      NEO4J_PASS: ${ADMIN_PASS}
+    #env_file:
+    #  - images/discovery-index/git-crypt/RUN_VARS
 #    volumes:
 #      - type: bind
 #        source: ../shiny/dashboard/
