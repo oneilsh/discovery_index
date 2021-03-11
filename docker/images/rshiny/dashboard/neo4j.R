@@ -129,12 +129,12 @@ format_Default <- function(G) {
     nodeProps$name
   }) %>% unlist())
   
-  # and "name" for edges
+  # and "name" for edges - but in this case it becomes the popup
   select <- G$relationships$properties %>% lapply(function(nodeProps) {
     "name" %in% names(nodeProps)
   }) %>% unlist()
   
-  G$relationships$label[select] <- G$relationships$label[select] %.% ": " %.% (G$relationships$properties[select] %>% lapply(function(nodeProps) {
+  G$relationships$title[select] <- (G$relationships$properties[select] %>% lapply(function(nodeProps) {
     nodeProps$name
   }) %>% unlist())
   
