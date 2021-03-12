@@ -1,3 +1,0 @@
-RUN_VARS filter=git-crypt diff=git-crypt
-certs/* filter=git-crypt diff=git-crypt
-certs/trusted/* filter=git-crypt diff=git-crypt

@@ -19,14 +19,12 @@ services:
       GITHUB_ACCESS_TOKEN: ${GITHUB_TOKEN}
       API_ADMIN_USER: ${ADMIN_USER}
       API_ADMIN_PASSWORD: ${ADMIN_PASS}
-    #env_file:
-    #  - images/discovery-index/git-crypt/RUN_VARS
     command: npm run prod
 
     volumes:
       - type: bind
         target: /usr/src/app/git-crypt/certs
-        source: ./images/discovery-index/git-crypt/certs
+        source: ${CERTS_PATH}
       - type: bind
         target: /var/log/discovery_index
         source: ./logs
@@ -47,19 +45,17 @@ services:
       NEO4J_https_ssl__policy: certs
       NEO4JLABS_PLUGINS: '["apoc"]'
       NEO4J_USER: neo4j
-      NEO4J_PASS: ${ADMIN_PASS:-adminpass}
-      NEO4J_AUTH: "neo4j/${ADMIN_PASS:-adminpass}"
+      NEO4J_PASS: ${ADMIN_PASS}
+      NEO4J_AUTH: "neo4j/${ADMIN_PASS}"
     ports:  # these ports are mapped to ports on the host machine
       - "7473:7473"
       - "7687:7687"
     expose: # these ports are only exposed to the docker service network (using non-ssl interface for internal traffic)
       - "7474"
-    #env_file:
-    #  - images/discovery-index/git-crypt/RUN_VARS
     volumes:
       - type: bind
         target: /var/lib/neo4j/certificates/certs
-        source: ./images/discovery-index/git-crypt/certs
+        source: ${CERTS_PATH}
 
   rshiny:
     build: images/rshiny
@@ -69,9 +65,3 @@ services:
       NEO_URL: http://neo4j:7474
       NEO4J_USER: ${ADMIN_USER}
       NEO4J_PASS: ${ADMIN_PASS}
-    #env_file:
-    #  - images/discovery-index/git-crypt/RUN_VARS
-#    volumes:
-#      - type: bind
-#        source: ../shiny/dashboard/
-#        target: /srv/shiny-server/

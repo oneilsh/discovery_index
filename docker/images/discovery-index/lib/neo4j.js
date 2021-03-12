@@ -5,7 +5,6 @@ exports.runCypher = async function runCypher(query, params, endpoint = process.e
   console.log(query)
   console.log("\n")*/
   var payload = {"query": query, "params": params}
-  console.log("AUTH:" + process.env.NEO4J_USER + ':' + process.env.NEO4J_PASS)
   var userPass = Buffer.from(process.env.NEO4J_USER + ':' + process.env.NEO4J_PASS).toString('base64')
   var head = {"Authorization" : "Basic " + userPass,
               "Content-Type": "application/json",
