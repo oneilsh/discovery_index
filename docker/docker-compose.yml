@@ -63,5 +63,5 @@ services:
       - "3838"
     environment:
       NEO_URL: http://neo4j:7474
-      NEO4J_USER: ${ADMIN_USER}
+      NEO4J_USER: "neo4j"
       NEO4J_PASS: ${ADMIN_PASS}

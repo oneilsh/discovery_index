@@ -28,7 +28,7 @@ chr_to_list <- function(x) {
 
 con <- neo4j_api$new(
   url = Sys.getenv("NEO_URL", "https://tehr-discovery-index-dev.cgrb.oregonstate.edu:7473"),
-  user = "neo4j",
+  user = Sys.getenv("NEO4J_USER", "neo4j"),
   password = Sys.getenv("NEO4J_PASS", "neo4j")
 )
 
