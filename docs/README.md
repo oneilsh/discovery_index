@@ -84,11 +84,11 @@ endpoint is more complex to allow for flexible graph-database relationship gener
 
 [JSON-schemas](https://json-schema.org/) used for validation can be found in the repo under `docker/images/discovery-index/static/schemas`. 
 
-### POST /update_profile
+### POST /admin/update_profile
 
 This method creates (if it doesn't exist already) a single node in the database to represent a person as their "primary" identifier that other secondary profiles (e.g. GitHub or ORCiD) can relate to. 
 
-### POST /update_github
+### POST /admin/update_github
 
 Example body: 
 

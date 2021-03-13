@@ -181,10 +181,10 @@ authRouter.post('/update_profile', function(req, res) {
 //     DELETE SOURCE
 ///////////////////////////////////////
 
-var update_profile_schema = JSON.parse(fs.readFileSync('./static/schemas/delete_source.json'))
+var delete_source_schema = JSON.parse(fs.readFileSync('./static/schemas/delete_source.json'))
 
 authRouter.post('/delete_source', function(req, res) {
-  var validate_result = validate(req.body, update_profile_schema)
+  var validate_result = validate(req.body, delete_source_schema)
   if(validate_result.valid) {
     if(!req.body.clearFirst) { req.body.clearFirst = false }
     if(!req.body.diProject) { req.body.diProject = "default" }
