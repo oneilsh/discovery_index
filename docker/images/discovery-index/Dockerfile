@@ -16,5 +16,6 @@ RUN npm install
 COPY package.json server.js ./ 
 COPY lib/ ./lib/
 COPY static/ ./static/
+COPY wait-for-it.sh ./
 
-CMD ["npm", "run", "prod"]
+CMD ["./wait-for-it.sh", "-t", "0", "neo4j:7474", "--", "npm", "run", "prod"]

@@ -19,7 +19,6 @@ services:
       GITHUB_ACCESS_TOKEN: ${GITHUB_TOKEN}
       API_ADMIN_USER: ${ADMIN_USER}
       API_ADMIN_PASSWORD: ${ADMIN_PASS}
-    command: npm run prod
 
     volumes:
       - type: bind

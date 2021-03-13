@@ -23,4 +23,6 @@ COPY run.sh .
 
 COPY shiny-server.conf /etc/shiny-server/shiny-server.conf
 
-ENTRYPOINT [ "./run.sh" ]
+COPY wait-for-it.sh ./
+
+ENTRYPOINT [ "./wait-for-it.sh", "-t", "0", "neo4j:7474", "--", "./run.sh" ]
