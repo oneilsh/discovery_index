@@ -98,6 +98,8 @@ primaryIdServer <- function(id) {
     
     output$network <- renderVisNetwork({
       ig <- G()
+      # so visNetwork doesn't want an id col on the relationships table - it'll F things up by reading data from the nodes table apparently...
+      ig$relationships$id <- NULL
       
       visNetwork(ig$nodes, ig$relationships) %>%
         visOptions(highlightNearest = list(enabled = T, degree = 1, hover = T), collapse = TRUE) %>%

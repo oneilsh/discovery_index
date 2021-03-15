@@ -52,7 +52,6 @@ run_query_table <- function(query_str) {
 }
 
 
-
 format_nodes <- function(G) {
   ## don't try anything if there's no data!
   if(nrow(G$nodes) < 1) { return(G) }
@@ -68,7 +67,6 @@ format_nodes <- function(G) {
   G$nodes$firstLabel <- lapply(G$nodes$label, function(x) {return(x[[1]])}) %>% unlist()
 
   #G$nodes$group <- G$nodes$firstLabel
-
   G <- format_Default(G)
   G <- format_diStyle(G, what = "nodes")
   G <- format_diStyle(G, what = "relationships")
@@ -86,58 +84,43 @@ format_nodes <- function(G) {
 
 
 format_Default <- function(G) {
-  G$nodes$label <- ""
-  G$nodes$title <- ""
+  G$nodes$label <- NA
+  G$nodes$title <- NA
   G$nodes$size <- 20
   G$relationships$width <- 2
-  G$relationships$label <- ""
-  G$relationships$title <- ""
+  G$relationships$label <- NA
+  G$relationships$title <- NA
   G$relationships$arrows <- "middle"
   
-  select <- G$nodes$title == ""
-  # pick indices for colors into the colors_107 by getting a hash digest of each relationship type
-  # and mapping it to an int between 1 and 107
+  select <- is.na(G$nodes$title)
+  # ## pick indices for colors into the colors_107 by getting a hash digest of each relationship type
+  # ## and mapping it to an int between 1 and 107
   color_indices <- G$nodes$firstLabel[select] %>% as.character() %>% digest2int() %>% `%%`(107) %>% `+`(1)
   G$nodes$color[select] <- colors_107[color_indices]
-  
-  G$nodes$label[select] <- G$nodes$firstLabel[select] 
+   
+  G$nodes$label[select] <- G$nodes$firstLabel[select]
   G$nodes$title[select] <- lapply(G$nodes$properties[select], function(x) {
-    "<h3>Node</h3><p>" %.% 
+    "<h3>Node</h3><p>" %.%
       paste("<b>" %.% names(x) %.% "</b>" %.% ": " %.% x, collapse = "<br /><br />") %.%
     "</p>"
   }) %>% unlist()
- 
-  select <- G$relationships$title == ""
-  # pick indices for colors into the colors_107 by getting a hash digest of each relationship type
-  # and mapping it to an int between 1 and 107
-  color_indices <- G$relationships$type[select] %>% digest2int() %>% `%%`(107) %>% `+`(1)
+
+
+  select <- is.na(G$relationships$title)
+  ## pick indices for colors into the colors_107 by getting a hash digest of each relationship type
+  ## and mapping it to an int between 1 and 107
+  color_indices <- G$relationships$type[select] %>% as.character() %>% digest2int() %>% `%%`(107) %>% `+`(1)
   G$relationships$color[select] <- colors_107[color_indices]
+  G$relationships$title <- G$relationships$type
+
   G$relationships$title[select] <- "<h3>Edge: " %.% G$relationships$type[select] %.% "</h3>" %.%
     (lapply(G$relationships$properties[select], function(x) {
     "<p>" %.% "<br /><br />" %.%
-      "<b>Type:</b> " %.% x$type %.% 
+      "<b>Type:</b> " %.% x$type %.%
       paste("<b>" %.% names(x) %.% "</b>" %.% ": " %.% x, collapse = "<br /><br />") %.%
       "</p>"
      }) %>% unlist())
-  
-  ## "name" shall be special, used to determine node and edge labels if present
-  select <- G$nodes$properties %>% lapply(function(nodeProps) {
-    "name" %in% names(nodeProps)
-  }) %>% unlist()
-  
-  G$nodes$label[select] <- G$nodes$label[select] %.% ": " %.% (G$nodes$properties[select] %>% lapply(function(nodeProps) {
-    nodeProps$name
-  }) %>% unlist())
-  
-  # and "name" for edges - but in this case it becomes the popup
-  select <- G$relationships$properties %>% lapply(function(nodeProps) {
-    "name" %in% names(nodeProps)
-  }) %>% unlist()
-  
-  G$relationships$title[select] <- (G$relationships$properties[select] %>% lapply(function(nodeProps) {
-    nodeProps$name
-  }) %>% unlist())
-  
+
   return(G)
 }
 
