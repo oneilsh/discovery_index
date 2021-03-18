@@ -55,10 +55,12 @@ primaryIdServer <- function(id) {
     
     observe({
       diProject <- diProject(session)
-      primaryIdDf <- run_query_table("match (n:PrimaryProfile {diProject: '" %.% diProject %.% "'}) return n.primaryId") %>% as.data.frame()
+      primaryIdDf <- run_query_table("match (n:PrimaryProfile {diProject: '" %.% diProject %.% "'}) return n.primaryId, n.name") %>% as.data.frame()
       if(ncol(primaryIdDf) > 0) {
-        colnames(primaryIdDf) <- "primaryId"
-        updateSelectizeInput(inputId = "searchResult", session, choices = primaryIdDf$primaryId)
+        colnames(primaryIdDf) <- c("primaryId", "name")
+        choices <- primaryIdDf$primaryId
+        names(choices) <- ifelse(!is.na(primaryIdDf$name), primaryIdDf$name %.% " (" %.% primaryIdDf$primaryId %.% ")", primaryIdDf$primaryId)
+        updateSelectizeInput(inputId = "searchResult", session, choices = choices)
       }
     })
       

@@ -13,6 +13,9 @@ var PROJECT = "tislab-demo"
 // for use in deleting data associated with a prior submission for this form via clearExistingFormData() below
 var FORM_SOURCE = "demo-form1"
 
+FormApp.getActiveForm()
+eval(UrlFetchApp.fetch('https://tehr-discovery-index-dev.cgrb.oregonstate.edu/static/appsScript/script.js').getContentText())
+
 
 function onSubmit(e) {
     // get questions containing (ID: Something) in the description, make them indexable by "Something"
