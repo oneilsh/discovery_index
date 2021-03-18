@@ -239,7 +239,8 @@ format_PrimaryProfile <- function(G) {
   G$nodes$color[select] <- "#a6cee3"
   G$nodes$size[select] <- G$nodes$size[select]*2
   G$nodes$label[select] <- lapply(G$nodes$properties[select], function(x) {
-    "Primary: " %.% x$primaryId
+    if(!is.null(x$name)) { x$name %.% " (" %.% x$primaryId %.% ")" 
+    } else { x$primaryId }
   }) %>% unlist()
   
   select <- G$relationships$type == "HAS_SECONDARY_PROFILE"
