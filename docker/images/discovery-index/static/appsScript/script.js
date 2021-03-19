@@ -190,8 +190,8 @@ default_textItemProperties = {
   edgeType: "AnsweredQuestion",
   nodeType: "Answer",
   edgeStyle: {label: "", title: "<h3>${title}</h3><p>${help_text}</p><p>Response: ${response}</p>", length: 200, 'font.size': 18},
-  nodeStyle: {label: "", title: "${response}", size: 30, 'font.size': 18},
-  nodeProperties: {"response": "${response}"},
+  nodeStyle: {size: 30, 'font.size': 18},
+  nodeProperties: {},
   edgeProperties: {}
 }
 
@@ -199,7 +199,7 @@ default_gridItemProperties = {
   edgeType: "AnsweredQuestion",
   nodeType: "Answer",
   edgeStyle: {label: "", title: "<h3>${title}</h3><p>${help_text}</p><p>Response: ${row_text}/${column_text}</p>", length: 200, 'font.size': 18},
-  nodeStyle: {label: "", title: "${row_text}", size: 30, 'font.size': 18},
+  nodeStyle: {size: 30, 'font.size': 18},
   nodeProperties: {},
   edgeProperties: {}
 }
