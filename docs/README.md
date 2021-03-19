@@ -21,6 +21,13 @@ DI is designed to store data primarily about *people*, and provides mechanisms f
 <br />
 <br />
 
+### Data Refreshing
+
+To protect personal privacy, one of DI's design principles is removal of existing data on update: harvesting data from GitHub or ORCiD for a given 
+user first removes all data associated with that user for that source, allowing users the opportunity to, for example, make a GitHub repository private or
+remove information from their ORCiD profile and trigger a data refresh by resubmitting the ingestion form. This is also enabled for form-sourced information, and 
+works well with forms like Google and Qualtrics which support re-taking responses. 
+
 <!-- div:right-panel -->
 
 <!-- panels:end -->

@@ -33,7 +33,7 @@ primaryIdUI <- function(id) {
   tagList(
     fluidRow(
       box(selectizeInput(inputId = ns("searchResult"), 
-                        label = "Search...",
+                        label = "Search for profiles to display:",
                         choices = NULL,
                         multiple = TRUE,
                         selected = NULL),
@@ -42,7 +42,7 @@ primaryIdUI <- function(id) {
     fluidRow(
       box(visNetworkOutput(ns("network"), height = "500px"), width = 12),
       ##box(width = 2),
-      box(dataTableOutput(ns("pubTable")), width = 12)
+      box(HTML("<b>Publication Summary of Selected Profiles (from ORCiD):</b><br />"), dataTableOutput(ns("pubTable")), width = 12)
     )
     
   )
