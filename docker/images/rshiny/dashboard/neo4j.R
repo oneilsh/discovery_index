@@ -52,6 +52,17 @@ run_query_table <- function(query_str) {
 }
 
 
+# removes nodes that are simple leaves - only one connection (in or out)
+drop_leaves <- function(G, nodetypes = c()) {
+  keep_regardless <- G$nodes$id[!G$nodes$firstLabel %in% nodetypes]
+  degrees <- c(G$relationships$from, G$relationships$to) %>% sort() %>% rle()
+  degrees_gt1 <- degrees$values[degrees$lengths > 1]
+  keep <- unique(c(keep_regardless, degrees_gt1))
+  G$relationships <- G$relationships[G$relationships$from %in% keep & G$relationships$to %in% keep, ]
+  G$nodes <- G$nodes[G$nodes$id %in% keep,]
+  return(G)
+}
+
 format_nodes <- function(G) {
   ## don't try anything if there's no data!
   if(nrow(G$nodes) < 1) { return(G) }

@@ -74,7 +74,7 @@ primaryIdServer <- function(id) {
         (NOT r.type = 'ASSOC_PRIMARY')
       )
       return n, r, q"
-      run_query(query)
+      run_query(query) %>% drop_leaves(nodetypes = c("GithubProfile", "ExternalId"))
     })
     
     dt <- eventReactive(input$searchResult, {
