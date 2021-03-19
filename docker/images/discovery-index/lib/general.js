@@ -13,7 +13,7 @@ exports.updateProfile = async function(primaryId, profile) {
     var params = {"primaryId": primaryId, "profile": profile}
     var query = `
 MERGE (p:PrimaryProfile {primaryId: $primaryId})
-SET p = $profile
+SET p += $profile
 RETURN p
 `
 
