@@ -372,10 +372,12 @@ function mergeDeep(target, source) {
 }
 
 
-function getQuestionsByIds() {
+
+function getQuestionsByIds(index = "last") {
     var form = FormApp.getActiveForm();
     var allResponses = form.getResponses();
-    var latestResponse = allResponses[allResponses.length - 1];
+    if(index == "last") { index = allResponses.length - 1 }
+    var latestResponse = allResponses[index];
     var responses = latestResponse.getItemResponses();
 
     result = {}
