@@ -15,7 +15,7 @@ var validate = require('jsonschema').validate;
 var { runCypher } = require('./lib/neo4j.js')
 var { updateGithub } = require('./lib/gitHub.js')
 var { updateOrcid } = require('./lib/orcid.js')
-var { updateProfile, updateRelationships, deleteBySource, updateRelationshipFromApi } = require('./lib/general.js')
+var { updateProfile, updateRelationships, deleteBySource, updateRelationshipFromApi, getNodesByLabel} = require('./lib/general.js')
 var { orNa, getUser } = require('./lib/utils.js')
 
 
@@ -196,6 +196,14 @@ authRouter.post('/delete_source', function(req, res) {
     res.status(400).json({ "jsonschemaError": validate_result })
   }
 
+})
+
+
+app.get('/public/nodes', function(req, res) {
+  var label = req.query.label || "PrimaryProfile"
+  getNodesByLabel(label)
+  .then(result => {res.status(200).json(result)})
+  .catch(result => {res.status(400).json(result)})
 })
 
 

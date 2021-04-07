@@ -24,6 +24,15 @@ RETURN p
   }
 }
 
+exports.getNodesByLabel = async function(label) {
+  try {
+    var result = await runCypher("MATCH (n) RETURN n", {label: label})
+    return result.data
+  } catch(e) {
+    throw e
+  }
+}
+
 deleteBySource = exports.deleteBySource = async function(primaryId, source, diProject = "default") {
   try {
     var params = {"primaryId": primaryId, "source": source, "diProject": diProject}
