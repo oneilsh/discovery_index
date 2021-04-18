@@ -24,9 +24,10 @@ RETURN p
   }
 }
 
-exports.getNodesByLabel = async function(label) {
+exports.getNodesByLabel = async function(label, diProject) {
   try {
-    var result = await runCypher("MATCH (n) RETURN n", {label: label})
+    if(label != "") { label = ":" + label}
+    var result = await runCypher("MATCH (node" + label + " {diProject: $diProject}) WHERE NOT exists(node.admin) OR node.admin = false OR node.admin = 'false' RETURN node", {"diProject": diProject})
     return result.data
   } catch(e) {
     throw e

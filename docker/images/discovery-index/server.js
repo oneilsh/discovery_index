@@ -199,11 +199,18 @@ authRouter.post('/delete_source', function(req, res) {
 })
 
 
+var get_nodes_schema = JSON.parse(fs.readFileSync('./static/schemas/get_nodes.json'))
+
 app.get('/public/nodes', function(req, res) {
-  var label = req.query.label || "PrimaryProfile"
-  getNodesByLabel(label)
-  .then(result => {res.status(200).json(result)})
-  .catch(result => {res.status(400).json(result)})
+  var validate_result = validate(req.query, get_nodes_schema)
+
+  if(validate_result.valid) {
+    getNodesByLabel(req.query.label, req.query.diProject || "default")
+    .then(result => {res.status(200).json(result)})
+    .catch(result => {res.status(400).json(result)})
+  } else {
+    res.status(400).json({ "jsonschemaError": validate_result })
+  }
 })
 
 

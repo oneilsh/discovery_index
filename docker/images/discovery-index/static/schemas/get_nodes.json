@@ -1,0 +1,27 @@
+{
+    "type": "object",
+    "properties": {
+      "label": {
+        "type": "string",
+        "description": "Match nodes with this label; must be alphanumeric and underscores only, can be empty to select all.",
+        "examples": [
+          "Person",
+          "PERSON",
+          "A_Person"
+        ],
+        "pattern": "^[A-Za-z0-9_]*$"
+      },
+      "diProject": {
+        "type": "string",
+        "default": "default",
+        "description": "diProject to use (if hosting multiple projects in one instance).",
+        "examples": [
+          "osu-ehrc-index",
+          "tislab-members"
+        ]
+      }
+    },
+    "required": [
+      "label"
+    ]
+  }
