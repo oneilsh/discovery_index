@@ -63,7 +63,10 @@ primaryIdServer <- function(id) {
         updateSelectizeInput(inputId = "searchResult", session, choices = choices)
       }
     })
-      
+    
+    # TODO: we probably will want to update how this looks... for now we filter matches based on admin status of the *edge* only
+    # in the end we'll probably want to not use the neo4j library in the R code here, but rather make REST calls to the api server
+    # letting that do the heavy lifting of querying etc.
     G <- eventReactive(input$searchResult, {
       project <- diProject(session)
       
@@ -73,6 +76,8 @@ primaryIdServer <- function(id) {
       ((NOT exists(r.type)) OR
         (NOT r.type = 'ASSOC_PRIMARY')
       )
+      AND
+      (NOT exists(r.admin) OR r.admin = false OR r.admin = 'false')
       return n, r, q"
       run_query(query) %>% drop_leaves(nodetypes = c("GithubProfile", "ExternalId"))
     })
@@ -88,6 +93,8 @@ primaryIdServer <- function(id) {
       )
       AND
       (q:Work)
+      AND
+      (NOT exists(r.admin) OR r.admin = false OR r.admin = 'false')
       return DISTINCT r.primaryId AS `Primary ID`, q.journalTitle AS `Venue`, count(q.journalTitle) as `Count`"
       res_df <- data.frame(`Primary ID` = c(), Venue = c(), Count = c())
       res <- run_query_table(query) %>% as.data.frame()
