@@ -1,0 +1,17 @@
+{
+    "type": "object",
+    "properties": {
+      "diProject": {
+        "type": "string",
+        "default": "default",
+        "description": "diProject to delete.",
+        "examples": [
+          "osu-ehrc-index",
+          "tislab-members"
+        ]
+      }
+    },
+    "required": [
+      "diProject"
+    ]
+  }
