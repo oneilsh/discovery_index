@@ -64,9 +64,6 @@ primaryIdServer <- function(id) {
       }
     })
     
-    # TODO: we probably will want to update how this looks... for now we filter matches based on admin status of the *edge* only
-    # in the end we'll probably want to not use the neo4j library in the R code here, but rather make REST calls to the api server
-    # letting that do the heavy lifting of querying etc.
     G <- eventReactive(input$searchResult, {
       project <- diProject(session)
       
@@ -76,10 +73,10 @@ primaryIdServer <- function(id) {
       ((NOT exists(r.type)) OR
         (NOT r.type = 'ASSOC_PRIMARY')
       )
-      AND
-      (NOT exists(r.admin) OR r.admin = false OR r.admin = 'false')
       return n, r, q"
-      run_query(query) %>% drop_leaves(nodetypes = c("GithubProfile", "ExternalId"))
+      run_query(query) %>% 
+        drop_leaves(nodetypes = c("GithubProfile", "ExternalId")) %>%
+        drop_by_prop(list("admin" = function(value) {tolower(value) == "true"})) # covers boolean and string representations
     })
     
     dt <- eventReactive(input$searchResult, {

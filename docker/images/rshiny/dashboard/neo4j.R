@@ -48,6 +48,7 @@ run_query <- function(query_str) {
 run_query_table <- function(query_str) {
   t <- query_str %>%
     call_neo4j(con, type = "row")
+  str(t)
   return(t)
 }
 
@@ -60,6 +61,42 @@ drop_leaves <- function(G, nodetypes = c()) {
   keep <- unique(c(keep_regardless, degrees_gt1))
   G$relationships <- G$relationships[G$relationships$from %in% keep & G$relationships$to %in% keep, ]
   G$nodes <- G$nodes[G$nodes$id %in% keep,]
+  return(G)
+}
+
+# removes nodes and edges that have properties defined by the list
+# should be a named list with a filter function
+# e.g. drop_by_prop(G, list("admin" = function(value) {value == TRUE | value == "true"}))
+drop_by_prop <- function(G, prop_filters = list()) {
+  for(prop_name in names(prop_filters)) {
+    check_func <- prop_filters[[prop_name]]
+
+    drop_nodes <- lapply(G$nodes$properties, function(node_props) {
+      if(!is.null(node_props[[prop_name]])) {
+        check_func(node_props[[prop_name]])
+      } else {
+        FALSE
+      }
+    }) %>% unlist()
+    
+    keep_node_ids <- G$nodes$id[!drop_nodes]
+    G$nodes <- G$nodes[!drop_nodes,]
+    
+    # we only keep relationships if both ends are also kept
+    G$relationships <- G$relationships[G$relationships$from %in% keep_node_ids & G$relationships$to %in% keep_node_ids,]
+    
+    # but we also remove any that themselves match the filter
+    drop_edges <- lapply(G$relationships$properties, function(edge_props) {
+      if(!is.null(edge_props[[prop_name]])) {
+        check_func(edge_props[[prop_name]])
+      } else {
+        FALSE
+      }
+    }) %>% unlist() 
+    
+    G$relationships <- G$relationships[!drop_edges,]
+  }
+  
   return(G)
 }
 
@@ -336,10 +373,10 @@ format_diStyle <- function(G, what = "nodes") {
 }
 
 
-G <- run_query("match (p) -[r]-> (t)  WHERE
-               t:Food OR
-               t:Timezone
-               return p, r, t") 
+G <- run_query("match (p) -[r]-> (t)
+               return p, r, t") %>%
+     drop_by_prop(list("admin" = function(value) {tolower(value) == "true"})) # covers boolean and string representations
+
 
 print(visNetwork(G$nodes, G$relationships) %>%
   visIgraphLayout(smooth = TRUE, physics = TRUE) ) %>%
