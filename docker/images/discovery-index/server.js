@@ -15,7 +15,7 @@ var validate = require('jsonschema').validate;
 var { runCypher } = require('./lib/neo4j.js')
 var { updateGithub } = require('./lib/gitHub.js')
 var { updateOrcid } = require('./lib/orcid.js')
-var { updateProfile, updateRelationships, deleteBySource, updateRelationshipFromApi, getNodesByLabel} = require('./lib/general.js')
+var { updateProfile, updateRelationships, deleteBySource, updateRelationshipFromApi, getNodesByLabel, deleteProject } = require('./lib/general.js')
 var { orNa, getUser } = require('./lib/utils.js')
 
 
@@ -156,6 +156,8 @@ authRouter.post('/update_orcid', function(req, res) {
 ///////////////////////////////////////
 
 
+
+
 authRouter.post('/update_profile', function(req, res) {
   var validate_result = validate(req.body, JSON.parse(fs.readFileSync('./static/schemas/update_profile.json')))
   if(validate_result.valid) {
@@ -171,6 +173,27 @@ authRouter.post('/update_profile', function(req, res) {
   }
 
 })
+
+
+///////////////////////////////////////
+//     DELETE PROJECT
+///////////////////////////////////////
+
+
+authRouter.post('/delete_project', function(req, res) {
+  var validate_result = validate(req.body, JSON.parse(fs.readFileSync('./static/schemas/delete_project.json')))
+  if(validate_result.valid) {
+    if(!req.body.diProject) { req.body.diProject = "default" }
+    deleteProject(req.body.diProject)
+      .then(result => {res.status(200).json(result)})
+      .catch(result => {res.status(400).json(result)})
+
+  } else {
+    res.status(400).json({ "jsonschemaError": validate_result })
+  }
+
+})
+
 
 
 ///////////////////////////////////////

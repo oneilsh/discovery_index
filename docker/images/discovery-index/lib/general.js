@@ -34,6 +34,23 @@ exports.getNodesByLabel = async function(label, diProject) {
   }
 }
 
+exports.deleteProject = async function(diProject = "default") {
+  try {
+    var params = {"diProject": diProject}
+    var qeury = `
+MATCH (n) -[r {diProject: $diProject}]-> (t)
+DELETE r
+WITH r as r
+  MATCH (n {diProject: $diProject})
+  DETACH delete n
+`
+    console.log("Removing all data for project " + diProject)
+    await runCypher(query, params)
+  } catch(e) {
+    throw(e)
+  }
+}
+
 deleteBySource = exports.deleteBySource = async function(primaryId, source, diProject = "default") {
   try {
     var params = {"primaryId": primaryId, "source": source, "diProject": diProject}
