@@ -36,7 +36,7 @@ const options = {
 app.use('/dashboard', createProxyMiddleware(options))
 
 
-// TODO: drop usage of backpointers in favor of explicit searching for nodes without paths to
+// TODO (?): drop usage of backpointers in favor of explicit searching for nodes without paths to
 // PrimaryProfile nodes via technique at https://stackoverflow.com/questions/27778120/neo4j-cypher-search-for-nodes-with-no-path-between-them
 
 
@@ -98,10 +98,9 @@ runCypher(`CALL apoc.schema.assert(
 //     UPDATE RELATIONSHIP VIA API
 ///////////////////////////////////////
 
-var update_relationship_schema = JSON.parse(fs.readFileSync('./static/schemas/update_relationship.json'))
 
 authRouter.post('/update_relationship', function(req, res) {
-  var validate_result = validate(req.body, update_relationship_schema)
+  var validate_result = validate(req.body, JSON.parse(fs.readFileSync('./static/schemas/update_relationship.json')))
   if(validate_result.valid) {
     updateRelationshipFromApi(req.body) // inconsistent w/ others
       .then(result => { res.status(200).json(result) })
@@ -117,10 +116,9 @@ authRouter.post('/update_relationship', function(req, res) {
 //     UPDATE GITHUB
 ///////////////////////////////////////
 
-var update_github_schema = JSON.parse(fs.readFileSync('./static/schemas/update_github.json'))
 
 authRouter.post('/update_github', function(req, res) {
-  var validate_result = validate(req.body, update_github_schema)
+  var validate_result = validate(req.body, JSON.parse(fs.readFileSync('./static/schemas/update_github.json')))
   if(validate_result.valid) {
     updateGithub(req.body.primaryId, req.body.username, _.get(req, "body.diProject", "default"))
       .then(result => {res.status(200).json(result)})
@@ -136,10 +134,9 @@ authRouter.post('/update_github', function(req, res) {
 //     UPDATE ORCID
 ///////////////////////////////////////
 
-var update_orcid_schema = JSON.parse(fs.readFileSync('./static/schemas/update_orcid.json'))
 
 authRouter.post('/update_orcid', function(req, res) {
-  var validate_result = validate(req.body, update_orcid_schema)
+  var validate_result = validate(req.body, JSON.parse(fs.readFileSync('./static/schemas/update_orcid.json')))
   console.log("ORCID REQUEST")
   console.log(req.body)
   if(validate_result.valid) {
@@ -158,10 +155,9 @@ authRouter.post('/update_orcid', function(req, res) {
 //     UPDATE PROFILE
 ///////////////////////////////////////
 
-var update_profile_schema = JSON.parse(fs.readFileSync('./static/schemas/update_profile.json'))
 
 authRouter.post('/update_profile', function(req, res) {
-  var validate_result = validate(req.body, update_profile_schema)
+  var validate_result = validate(req.body, JSON.parse(fs.readFileSync('./static/schemas/update_profile.json')))
   if(validate_result.valid) {
     // this is confusing: the api is {primaryId: "somebody", diProject: "myProject", profile: {"Name": "Joe Schmoe", Age: 39}}
     // but we put the diProject into the profile since in the call SET is used to set all properties at once from the profile
@@ -181,10 +177,9 @@ authRouter.post('/update_profile', function(req, res) {
 //     DELETE SOURCE
 ///////////////////////////////////////
 
-var delete_source_schema = JSON.parse(fs.readFileSync('./static/schemas/delete_source.json'))
 
 authRouter.post('/delete_source', function(req, res) {
-  var validate_result = validate(req.body, delete_source_schema)
+  var validate_result = validate(req.body, JSON.parse(fs.readFileSync('./static/schemas/delete_source.json')))
   if(validate_result.valid) {
     if(!req.body.clearFirst) { req.body.clearFirst = false }
     if(!req.body.diProject) { req.body.diProject = "default" }
@@ -199,10 +194,9 @@ authRouter.post('/delete_source', function(req, res) {
 })
 
 
-var get_nodes_schema = JSON.parse(fs.readFileSync('./static/schemas/get_nodes.json'))
 
 app.get('/public/nodes', function(req, res) {
-  var validate_result = validate(req.query, get_nodes_schema)
+  var validate_result = validate(req.query, JSON.parse(fs.readFileSync('./static/schemas/get_nodes.json')))
 
   if(validate_result.valid) {
     getNodesByLabel(req.query.label, req.query.diProject || "default")
