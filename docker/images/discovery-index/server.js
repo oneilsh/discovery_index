@@ -19,6 +19,7 @@ var { updateProfile, updateRelationships, deleteBySource, updateRelationshipFrom
 var { orNa, getUser } = require('./lib/utils.js')
 
 
+
 var { createProxyMiddleware } = require('http-proxy-middleware')
 
 // proxy middleware options
@@ -38,6 +39,32 @@ app.use('/dashboard', createProxyMiddleware(options))
 
 // TODO (?): drop usage of backpointers in favor of explicit searching for nodes without paths to
 // PrimaryProfile nodes via technique at https://stackoverflow.com/questions/27778120/neo4j-cypher-search-for-nodes-with-no-path-between-them
+
+
+// call this function for every request; if it sees application/json, it parses it and stores it in the req object before continuing on
+app.use(bodyParser.json())
+//authRouter.use(bodyParser.json())
+
+const OpenApiValidator = require('express-openapi-validator');
+ 
+app.use(
+  OpenApiValidator.middleware({
+    apiSpec: './static/schemas/openapi.yaml',
+    validateRequests: true,
+    validateResponses: false // false by default
+  }),
+);
+
+app.use((err, req, res, next) => {
+  // format error
+  console.log(err)
+  res.status(err.status || 500).json({
+    message: err.message,
+    errors: err.errors,
+  });
+});
+
+
 
 
 var api_insecure = process.env.API_INSECURE || "false"
@@ -64,9 +91,7 @@ if(api_insecure) {
 
 
 
-// call this function for every request; if it sees application/json, it parses it and stores it in the req object before continuing on
-app.use(bodyParser.json())
-authRouter.use(bodyParser.json())
+
 
 // basic logging - call logger middleware regardless of method; it calls next() to pass process on to the next middlewares
 // note the location: after authRouter.use(bodyParser.json()) (so that the logger has access to req.body as JSON)
@@ -97,6 +122,14 @@ runCypher(`CALL apoc.schema.assert(
 ///////////////////////////////////////
 //     UPDATE RELATIONSHIP VIA API
 ///////////////////////////////////////
+
+
+
+authRouter.post('/profiles/:primaryId/relationships', function(req, res) {
+  updateRelationshipFromApi(req.body) // inconsistent w/ others
+  .then(result => { res.status(200).json(result) })
+  .catch(result => { res.status(400).json(result) })
+})
 
 
 authRouter.post('/update_relationship', function(req, res) {
@@ -154,7 +187,6 @@ authRouter.post('/update_orcid', function(req, res) {
 ///////////////////////////////////////
 //     UPDATE PROFILE
 ///////////////////////////////////////
-
 
 authRouter.post('/update_profile', function(req, res) {
   var validate_result = validate(req.body, JSON.parse(fs.readFileSync('./static/schemas/update_profile.json')))

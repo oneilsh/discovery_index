@@ -1,0 +1,384 @@
+openapi: 3.0.0
+info:
+  title: discovery index
+  version: '1.0'
+  contact:
+    name: Shawn O'Neil
+  description: 'An API. '
+servers:
+  - url: /
+    description: default
+  - url: 'https://tehr-discovery-index-dev.cgrb.oregonstate.edu'
+    description: dev
+paths:
+  '/admin/profiles/{userId}/relationships':
+    parameters:
+      - schema:
+          type: string
+        name: userId
+        in: path
+        required: true
+    post:
+      summary: ''
+      operationId: post-admin-profiles-userId-relationships
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad Request
+          headers: {}
+      description: >-
+        Create new relationships by specifing a RelationshipsTemplate (usually
+        generated from form software, e.g. Qualtrics "web" survey flow tool);
+        previous relationships from the same "source" will be removed first if
+        present by default; this is controlled with the "clearFirst" property.
+      tags:
+        - forminput
+      security:
+        - admin: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RelationshipsTemplate'
+            examples:
+              example-1:
+                value:
+                  exampleDescription: >-
+                    Create several new PET nodes with relationship HAS_PET,
+                    using 'demo-project' as a disambiguation property added to
+                    all created nodes and edges.
+                  diProject: demo-project
+                  primaryId: oneilsh
+                  source: example1
+                  clearFirst: true
+                  edge:
+                    label: HAS_PET
+                    properties: {}
+                  target:
+                    labels:
+                      - PET
+                    properties:
+                      type: Cat
+                      name: 'Sterling Cooper,Byron Bojangles'
+                  repeat:
+                    property: target.properties.name
+                    splitChar: ','
+              example-2:
+                value:
+                  primaryId: ummm
+                  source: string
+                  clearFirst: true
+                  edge:
+                    label: string
+                    properties:
+                      admin: false
+                      category: Publications
+                  target:
+                    labels:
+                      - string
+                    properties:
+                      admin: false
+                      category: Publications
+                  convert: {}
+                  diProject: default
+                  ignoreIfAnyEmpty:
+                    - string
+                  repeat:
+                    property: string
+                    splitChar: string
+components:
+  schemas:
+    RelationshipsTemplate:
+      type: object
+      description: >-
+        A data model describing how a set of graph nodes and edges should be
+        created, designed for use with form webhooks.
+      title: RelationshipsTemplate
+      x-examples:
+        example-1:
+          exampleDescription: Create a new PET node with relationship HAS_PET
+          primaryId: oneilsh
+          source: example1
+          clearFirst: true
+          edge:
+            label: HAS_PET
+          target:
+            labels:
+              - PET
+            properties:
+              type: Cat
+              name: Sterling Cooper
+        example-2:
+          exampleDescription: >-
+            Create a new PET node with relationship HAS_PET, unless the pet name
+            or type is empty or unset (which it is in this case)
+          primaryId: oneilsh
+          source: example1
+          clearFirst: true
+          ignoreIfAnyEmpty:
+            - target.properties.name
+            - target.properties.type
+          edge:
+            label: HAS_PET
+          target:
+            labels:
+              - PET
+            properties:
+              type: Cat
+              name: ''
+        example-3:
+          exampleDescription: >-
+            Create several new PET nodes with relationship HAS_PET, using
+            'demo-project' as a disambiguation property added to all created
+            nodes and edges.
+          diProject: demo-project
+          primaryId: oneilsh
+          source: example1
+          clearFirst: true
+          edge:
+            label: HAS_PET
+          target:
+            labels:
+              - PET
+            properties:
+              type: Cat
+              name: 'Sterling Cooper,Byron Bojangles'
+          repeat:
+            property: target.properties.name
+            splitChar: ','
+        example-4:
+          exampleDescription: >-
+            Create a new PET node with several relationships with different
+            properties
+          primaryId: oneilsh
+          source: example1
+          clearFirst: true
+          edge:
+            label: CARES_FOR
+            properties:
+              careAction: 'feed,pet,snuggle'
+          target:
+            labels:
+              - PET
+            properties:
+              type: Cat
+              name: Sterling Cooper
+          repeat:
+            property: edge.properties.careAction
+            splitChar: ','
+        example-5:
+          exampleDescription: >-
+            Create a new PET node and relationship, convert values to integer or
+            numeric (to work around form APIs that only support string)
+          primaryId: oneilsh
+          source: example1
+          clearFirst: true
+          edge:
+            label: HAS_PET
+            properties:
+              sinceYears: '3.7'
+          target:
+            labels:
+              - PET
+            properties:
+              type: Cat
+              name: Sterling Cooper
+              age: '4'
+          convert:
+            target.properties.age: integer
+            edge.properties.sinceYears: float
+      properties:
+        primaryId:
+          $ref: '#/components/schemas/PrimaryID'
+        source:
+          $ref: '#/components/schemas/SourceID'
+        clearFirst:
+          type: boolean
+          default: true
+        edge:
+          type: object
+          required:
+            - label
+            - properties
+          properties:
+            label:
+              $ref: '#/components/schemas/EdgeType'
+            properties:
+              type: object
+              properties:
+                admin:
+                  type: boolean
+                  default: false
+                category:
+                  $ref: '#/components/schemas/CategoryID'
+        target:
+          type: object
+          required:
+            - labels
+            - properties
+          properties:
+            labels:
+              type: array
+              minItems: 1
+              uniqueItems: true
+              items:
+                $ref: '#/components/schemas/NodeLabel'
+            properties:
+              type: object
+              properties:
+                admin:
+                  type: boolean
+                  default: false
+                category:
+                  $ref: '#/components/schemas/CategoryID'
+        convert:
+          type: object
+        diProject:
+          $ref: '#/components/schemas/ProjectID'
+        ignoreIfAnyEmpty:
+          type: array
+          items:
+            type: string
+        repeat:
+          type: object
+          properties:
+            property:
+              type: string
+            splitChar:
+              type: string
+          required:
+            - property
+            - splitChar
+      required:
+        - primaryId
+        - source
+        - edge
+        - target
+    GithubProfile:
+      type: object
+      description: Associates a github username with a primary ID for a given project.
+      additionalProperties: false
+      properties:
+        primaryId:
+          $ref: '#/components/schemas/PrimaryID'
+        username:
+          $ref: '#/components/schemas/GithubID'
+        project:
+          $ref: '#/components/schemas/ProjectID'
+      required:
+        - primaryId
+        - username
+        - project
+      x-examples:
+        example-1:
+          primaryId: someuser@someplace.com
+          username: '@someuser'
+          project: default
+    PrimaryID:
+      type: string
+      title: PrimaryID
+      description: >-
+        A Discovery Index primary ID must be alphanumeric plus dots, dashes,
+        underscores, and @s.
+      pattern: '^[A-Za-z0-9@._-]+$'
+      minLength: 1
+      x-examples:
+        example-1: oneilsh
+        example-2: username@someplace.org
+        example-3: 995252-A56.L
+    GithubID:
+      type: string
+      title: GithubID
+      pattern: '^@?[A-Za-z0-9-]+$'
+      minLength: 1
+      description: 'Valid Github username, with or without the @.'
+      x-examples:
+        example-1: oneilsh
+        example-2: string
+    OrcidID:
+      type: string
+      title: OrcidID
+      pattern: '^(.*?orcid.org/)?(\d{4,4}-\d{4,4}-\d{4,4}-\d{4,4})(/?)$'
+      minLength: 1
+      example: 0000-0002-5996-7764
+      x-examples:
+        example-1: 0000-0002-5996-7764
+        example-2: 'https://orcid.org/0000-0002-5996-7764'
+      description: ''
+    NodeLabel:
+      type: string
+      title: NodeLabel
+      minLength: 1
+      pattern: '^[A-Za-z][A-Za-z0-9_]+$'
+      description: >-
+        This must be a valid node label as defined by neo4j, see
+        https://neo4j.com/docs/cypher-manual/current/syntax/naming/
+      x-examples:
+        example-1: Person
+        example-2: Publication
+    EdgeType:
+      type: string
+      title: EdgeType
+      pattern: '^[A-Za-z][A-Za-z0-9_]+$'
+      minLength: 1
+      description: >-
+        This must be a valid edge type as defined by neo4j, see
+        https://neo4j.com/docs/cypher-manual/current/syntax/naming/
+      x-examples:
+        example-1: HAS_EXPERIENCE
+        example-2: Enjoys
+    ProjectID:
+      type: string
+      title: ProjectID
+      pattern: '^[A-Za-z0-9_-]+$'
+      minLength: 1
+      description: >-
+        Project identifiers must be alphanumeric plus underscores and hyphens.
+        Defaults to "default".
+      default: default
+      example: default
+      x-examples:
+        example-1: default
+        example-2: myProject
+        example-3: tislab-demo
+    SourceID:
+      type: string
+      title: SourceID
+      pattern: '^[A-Za-z0-9_-]+$'
+      minLength: 1
+      x-examples:
+        example-1: demographics-form
+        example-2: PublicationsForm
+      description: >-
+        A "source" is a datasource used for information provenance, every
+        relationship in the database should indicate it's source; information
+        coming form ORCiD is labeled with "orcid", from Github "github", and
+        custom-entered information should specify an alphanumeric (plus
+        underscores and hyphens) source, such as the 'name' of the form
+        generating the information. 
+    CategoryID:
+      type: string
+      title: CategoryID
+      pattern: '^[A-Za-z0-9_ -]+$'
+      minLength: 1
+      example: Publications
+      description: >-
+        Categories are used for information grouping, and must be alphanumeric
+        plus underscores, hyphens, and spaces.
+      x-examples:
+        example-1: Personal
+        example-2: Work Related
+        example-3: hobbies
+  securitySchemes:
+    admin:
+      type: http
+      scheme: basic
+      description: >-
+        Access controlled by the database 'admin' password set during
+        deployment.
+tags:
+  - name: forminput
+  - name: github
+  - name: graphdb
+  - name: orcid
