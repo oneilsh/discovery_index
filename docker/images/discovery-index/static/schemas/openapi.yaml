@@ -3,7 +3,7 @@ info:
   title: discovery index
   version: '1.0'
   contact:
-    name: Shawn O'Neil
+    name: Shawn T. O'Neil esq.
   description: 'An API. '
 servers:
   - url: /
@@ -27,11 +27,7 @@ paths:
         '400':
           description: Bad Request
           headers: {}
-      description: >-
-        Create new relationships by specifing a RelationshipsTemplate (usually
-        generated from form software, e.g. Qualtrics "web" survey flow tool);
-        previous relationships from the same "source" will be removed first if
-        present by default; this is controlled with the "clearFirst" property.
+      description: 'Create new relationships by specifing a RelationshipsTemplate (usually generated from form software, e.g. Qualtrics "web" survey flow tool); previous relationships from the same "source" will be removed first if present by default; this is controlled with the "clearFirst" property.'
       tags:
         - forminput
       security:
@@ -44,10 +40,7 @@ paths:
             examples:
               example-1:
                 value:
-                  exampleDescription: >-
-                    Create several new PET nodes with relationship HAS_PET,
-                    using 'demo-project' as a disambiguation property added to
-                    all created nodes and edges.
+                  exampleDescription: 'Create several new PET nodes with relationship HAS_PET, using ''demo-project'' as a disambiguation property added to all created nodes and edges.'
                   diProject: demo-project
                   primaryId: oneilsh
                   source: example1
@@ -91,9 +84,7 @@ components:
   schemas:
     RelationshipsTemplate:
       type: object
-      description: >-
-        A data model describing how a set of graph nodes and edges should be
-        created, designed for use with form webhooks.
+      description: 'A data model describing how a set of graph nodes and edges should be created, designed for use with form webhooks.'
       title: RelationshipsTemplate
       x-examples:
         example-1:
@@ -110,9 +101,7 @@ components:
               type: Cat
               name: Sterling Cooper
         example-2:
-          exampleDescription: >-
-            Create a new PET node with relationship HAS_PET, unless the pet name
-            or type is empty or unset (which it is in this case)
+          exampleDescription: 'Create a new PET node with relationship HAS_PET, unless the pet name or type is empty or unset (which it is in this case)'
           primaryId: oneilsh
           source: example1
           clearFirst: true
@@ -128,10 +117,7 @@ components:
               type: Cat
               name: ''
         example-3:
-          exampleDescription: >-
-            Create several new PET nodes with relationship HAS_PET, using
-            'demo-project' as a disambiguation property added to all created
-            nodes and edges.
+          exampleDescription: 'Create several new PET nodes with relationship HAS_PET, using ''demo-project'' as a disambiguation property added to all created nodes and edges.'
           diProject: demo-project
           primaryId: oneilsh
           source: example1
@@ -148,9 +134,7 @@ components:
             property: target.properties.name
             splitChar: ','
         example-4:
-          exampleDescription: >-
-            Create a new PET node with several relationships with different
-            properties
+          exampleDescription: Create a new PET node with several relationships with different properties
           primaryId: oneilsh
           source: example1
           clearFirst: true
@@ -168,9 +152,7 @@ components:
             property: edge.properties.careAction
             splitChar: ','
         example-5:
-          exampleDescription: >-
-            Create a new PET node and relationship, convert values to integer or
-            numeric (to work around form APIs that only support string)
+          exampleDescription: 'Create a new PET node and relationship, convert values to integer or numeric (to work around form APIs that only support string)'
           primaryId: oneilsh
           source: example1
           clearFirst: true
@@ -278,9 +260,7 @@ components:
     PrimaryID:
       type: string
       title: PrimaryID
-      description: >-
-        A Discovery Index primary ID must be alphanumeric plus dots, dashes,
-        underscores, and @s.
+      description: 'A Discovery Index primary ID must be alphanumeric plus dots, dashes, underscores, and @s.'
       pattern: '^[A-Za-z0-9@._-]+$'
       minLength: 1
       x-examples:
@@ -311,9 +291,7 @@ components:
       title: NodeLabel
       minLength: 1
       pattern: '^[A-Za-z][A-Za-z0-9_]+$'
-      description: >-
-        This must be a valid node label as defined by neo4j, see
-        https://neo4j.com/docs/cypher-manual/current/syntax/naming/
+      description: 'This must be a valid node label as defined by neo4j, see https://neo4j.com/docs/cypher-manual/current/syntax/naming/'
       x-examples:
         example-1: Person
         example-2: Publication
@@ -322,9 +300,7 @@ components:
       title: EdgeType
       pattern: '^[A-Za-z][A-Za-z0-9_]+$'
       minLength: 1
-      description: >-
-        This must be a valid edge type as defined by neo4j, see
-        https://neo4j.com/docs/cypher-manual/current/syntax/naming/
+      description: 'This must be a valid edge type as defined by neo4j, see https://neo4j.com/docs/cypher-manual/current/syntax/naming/'
       x-examples:
         example-1: HAS_EXPERIENCE
         example-2: Enjoys
@@ -333,9 +309,7 @@ components:
       title: ProjectID
       pattern: '^[A-Za-z0-9_-]+$'
       minLength: 1
-      description: >-
-        Project identifiers must be alphanumeric plus underscores and hyphens.
-        Defaults to "default".
+      description: Project identifiers must be alphanumeric plus underscores and hyphens. Defaults to "default".
       default: default
       example: default
       x-examples:
@@ -350,22 +324,14 @@ components:
       x-examples:
         example-1: demographics-form
         example-2: PublicationsForm
-      description: >-
-        A "source" is a datasource used for information provenance, every
-        relationship in the database should indicate it's source; information
-        coming form ORCiD is labeled with "orcid", from Github "github", and
-        custom-entered information should specify an alphanumeric (plus
-        underscores and hyphens) source, such as the 'name' of the form
-        generating the information. 
+      description: 'A "source" is a datasource used for information provenance, every relationship in the database should indicate it''s source; information coming form ORCiD is labeled with "orcid", from Github "github", and custom-entered information should specify an alphanumeric (plus underscores and hyphens) source, such as the ''name'' of the form generating the information. '
     CategoryID:
       type: string
       title: CategoryID
       pattern: '^[A-Za-z0-9_ -]+$'
       minLength: 1
       example: Publications
-      description: >-
-        Categories are used for information grouping, and must be alphanumeric
-        plus underscores, hyphens, and spaces.
+      description: 'Categories are used for information grouping, and must be alphanumeric plus underscores, hyphens, and spaces.'
       x-examples:
         example-1: Personal
         example-2: Work Related
@@ -374,9 +340,7 @@ components:
     admin:
       type: http
       scheme: basic
-      description: >-
-        Access controlled by the database 'admin' password set during
-        deployment.
+      description: Access controlled by the database 'admin' password set during deployment.
 tags:
   - name: forminput
   - name: github
