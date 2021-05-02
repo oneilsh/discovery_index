@@ -3,7 +3,7 @@ info:
   title: discovery index
   version: '1.0'
   contact:
-    name: Shawn T. O'Neil esq.
+    name: Shawn T. O'Neil esq. 2
   description: 'An API. '
 servers:
   - url: /
