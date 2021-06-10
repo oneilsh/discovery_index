@@ -374,8 +374,8 @@ format_diStyle <- function(G, what = "nodes") {
 
 
 G <- run_query("match (p) -[r]-> (t)
-               return p, r, t") %>%
-     drop_by_prop(list("admin" = function(value) {tolower(value) == "true"})) # covers boolean and string representations
+               return p, r, t")# %>%
+    # drop_by_prop(list("admin" = function(value) {tolower(value) == "true"})) # covers boolean and string representations
 
 
 print(visNetwork(G$nodes, G$relationships) %>%
