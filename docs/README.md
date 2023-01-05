@@ -63,7 +63,7 @@ revoked/
 trusted/public.crt
 ```
 
-The service will run on port 443. To run on another port (e.g. 80) without certificates, use `API_PORT=80 API_INSECURE=true`.
+The service will run on port 443. To run on another port (e.g. 80) without certificates, use `API_PORT=80 API_INSECURE=true`. Edit: this feature may not be currently functional. Self-signed certificate generation: `openssl req -x509 -sha256 -days 365 -nodes -newkey rsa:2048 -subj "/CN=$HOST/C=US/L=San Francisco" -keyout private.key -out public.crt` where `$HOST` is the hostname or IP address.
 
 #### *Fine print*
 
@@ -84,7 +84,21 @@ before restarting the the neo4j service should you need to.
 
 <!-- div:title-panel -->
 
-## Usage/API (Qualtrics or other)
+## Dashboard (Qualtrics or other)
+
+<!-- div:left-panel -->
+
+The dashboard will run at `https://$HOST/dashboard/` - note that the training / is required. The current dashboard is a proof-of-concept R shiny application. 
+
+
+<!-- div:right-panel -->
+
+<!-- panels:end --> 
+
+
+
+
+## API Usage (Qualtrics or other)
 
 <!-- div:left-panel -->
 
