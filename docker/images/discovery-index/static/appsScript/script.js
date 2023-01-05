@@ -13,6 +13,9 @@ var PROJECT = "tislab-demo"
 // for use in deleting data associated with a prior submission for this form via clearExistingFormData() below
 var FORM_SOURCE = "demo-form1"
 
+// this pulls the logic from the running app; alternatively the source can be copied into the google script
+// if using self-signed certs, use:
+// eval(UrlFetchApp.fetch('https://...', {'validateHttpsCertificates': false}).getContentText())
 FormApp.getActiveForm()
 eval(UrlFetchApp.fetch('https://tehr-discovery-index-dev.cgrb.oregonstate.edu/static/appsScript/script.js').getContentText())
 
@@ -106,6 +109,7 @@ function onSubmit(e) {
 
 // set payload with JSON.stringify()
 var POST_OPTIONS = {
+    //"validateHttpsCertificates": false,  // if using self-signed certs
     "method": "post",
     "contentType": "application/json",      
     "headers": {Authorization: "Basic " + Utilities.base64Encode(API_USER + ":" + API_PASSWORD)},
