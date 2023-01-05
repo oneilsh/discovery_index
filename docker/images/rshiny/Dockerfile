@@ -6,10 +6,16 @@ RUN R -e "install.packages('shinydashboard')"
 RUN R -e "install.packages('dplyr')"
 RUN R -e "install.packages('visNetwork')"
 RUN R -e "install.packages('purrr')"
-RUN R -e "install.packages('neo4r')"
 RUN R -e "install.packages('RColorBrewer')"
 RUN R -e "install.packages('digest')"
 RUN R -e "install.packages('shiny')"
+
+# libssl is needed for neo4r deps, --allow-releaseinfo-change and 
+# exit 0 to avoid errors relating to old ubuntu version used in the old rocker/shiny image; exit 0s and multiple updates may not be needed
+RUN apt-get --allow-releaseinfo-change update && apt-get install -y apt-transport-https; exit 0
+RUN apt-get --allow-releaseinfo-change update && apt-get install -y libssl-dev; exit 0
+RUN R -e "install.packages('neo4r')"
+
 
 USER shiny
 
